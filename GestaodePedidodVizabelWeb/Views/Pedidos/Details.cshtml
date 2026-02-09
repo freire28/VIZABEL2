@@ -1,0 +1,472 @@
+@model GestaoPedidosVizabel.Models.Pedido
+
+@{
+    ViewData["Title"] = "Detalhes do Pedido";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Detalhes do Pedido</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CodPedido)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.CodPedido)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Cliente)</dt>
+            <dd class="col-sm-9">@(Model.Cliente?.Nomerazao ?? "N/A")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DataPedido)</dt>
+            <dd class="col-sm-9">@Model.DataPedido.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.DataEntrega)</dt>
+            <dd class="col-sm-9">@Model.DataEntrega.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.StatusPedido)</dt>
+            <dd class="col-sm-9">@(Model.StatusPedido?.Descricao ?? "N/A")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Vendedor)</dt>
+            <dd class="col-sm-9">@(Model.Vendedor?.Nome ?? "-")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FormaPagamento)</dt>
+            <dd class="col-sm-9">@(Model.FormaPagamento?.Descricao ?? "-")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EmitirNfe)</dt>
+            <dd class="col-sm-9">
+                @if (Model.EmitirNfe == true)
+                {
+                    <span class="badge bg-info">Sim</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Não</span>
+                }
+            </dd>
+
+            @if (!string.IsNullOrEmpty(Model.Observacoes))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Observacoes)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Observacoes)</dd>
+            }
+        </dl>
+
+        <div class="mt-3">
+            <a asp-action="Edit" asp-route-id="@Model.IdPedido" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            @if (Model.EmitirNfe == true)
+            {
+                <a asp-controller="NFe" asp-action="Create" asp-route-idPedido="@Model.IdPedido" class="btn btn-success" target="_blank">
+                    <i class="bi bi-receipt"></i> Gerar NFe
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Seção de Produtos do Pedido -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Produtos do Pedido</h5>
+    </div>
+    <div class="card-body">
+        <!-- Formulário para adicionar produto -->
+        <div class="card mb-3 bg-light">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-3">Adicionar Produto</h6>
+                <form id="formAdicionarProduto" method="post" asp-action="AdicionarProduto">
+                    <input type="hidden" name="idPedido" value="@Model.IdPedido" />
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="idProduto" class="form-label">Produto</label>
+                            <select id="idProduto" name="idProduto" class="form-select" required>
+                                <option value="">-- Selecione o Produto --</option>
+                                @foreach (var produto in (ViewBag.Produtos as List<SelectListItem>) ?? new List<SelectListItem>())
+                                {
+                                    <option value="@produto.Value">@produto.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="idGrade" class="form-label">SubProduto (Grade)</label>
+                            <select id="idGrade" name="idGrade" class="form-select" disabled>
+                                <option value="">-- Selecione primeiro o Produto --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-circle"></i> Adicionar Produto
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de produtos do pedido -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Grade (SubProduto)</th>
+                        <th>Quantidade</th>
+                        <th>Tamanhos</th>
+                        <th>Imagem</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var produto in Model.PedidoProdutos)
+                    {
+                        <tr>
+                            <td>@(produto.Produto?.Descricao ?? "N/A")</td>
+                            <td>@(produto.Grade?.Descricao ?? "-")</td>
+                            <td>@(produto.Quantidade?.ToString() ?? "-")</td>
+                            <td>
+                                @if (produto.PedidoProdTamanhos.Any())
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var tamanho in produto.PedidoProdTamanhos)
+                                        {
+                                            <span class="badge bg-info">
+                                                @(tamanho.GradeTamanho?.TamanhoProduto?.Tamanho ?? "N/A"): @tamanho.Quantidade
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sem tamanhos</span>
+                                }
+                            </td>
+                            <td>
+                                @if (produto.PedidoImagens != null && produto.PedidoImagens.Any())
+                                {
+                                    var imagem = produto.PedidoImagens.First();
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="@Url.Action("ExibirImagem", "Pedidos", new { id = imagem.IdImagem })" 
+                                             alt="Imagem do Produto" 
+                                             class="img-thumbnail" style="max-width: 80px; max-height: 80px; cursor: pointer;"
+                                             onclick="abrirModalImagem(@imagem.IdImagem)" />
+                                        <form method="post" asp-action="RemoverImagem" style="display:inline;" 
+                                              onsubmit="return confirm('Tem certeza que deseja remover esta imagem?');">
+                                            <input type="hidden" name="idPedido" value="@Model.IdPedido" />
+                                            <input type="hidden" name="idPedidoImagem" value="@imagem.IdImagem" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Remover Imagem">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="abrirModalUploadImagem(@produto.IdPedidoproduto, @Model.IdPedido)"
+                                            title="Adicionar Imagem">
+                                        <i class="bi bi-image"></i> Adicionar
+                                    </button>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="abrirModalTamanhos(@produto.IdPedidoproduto, @produto.IdProduto, @(produto.IdGrade ?? 0), @Model.IdPedido)"
+                                            title="Gerenciar Tamanhos">
+                                        <i class="bi bi-list-check"></i> Tamanhos
+                                    </button>
+                                    <form method="post" asp-action="RemoverProduto" style="display:inline;" 
+                                          onsubmit="return confirm('Tem certeza que deseja remover este produto do pedido?');">
+                                        <input type="hidden" name="idPedido" value="@Model.IdPedido" />
+                                        <input type="hidden" name="idPedidoProduto" value="@produto.IdPedidoproduto" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Remover">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.PedidoProdutos.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Nenhum produto adicionado ao pedido</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para gerenciar tamanhos -->
+<div class="modal fade" id="modalTamanhos" tabindex="-1" aria-labelledby="modalTamanhosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTamanhosLabel">Gerenciar Tamanhos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="tamanhosContainer" class="d-flex flex-wrap gap-3">
+                    <p class="text-muted">Carregando tamanhos...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarTamanhos()">Salvar Tamanhos</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para upload de imagem -->
+<div class="modal fade" id="modalUploadImagem" tabindex="-1" aria-labelledby="modalUploadImagemLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUploadImagemLabel">Adicionar Imagem ao Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formUploadImagem" method="post" asp-action="UploadImagem" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="uploadIdPedido" name="idPedido" />
+                    <input type="hidden" id="uploadIdPedidoProduto" name="idPedidoProduto" />
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label for="arquivoImagem" class="form-label">Selecione uma imagem</label>
+                        <input type="file" class="form-control" id="arquivoImagem" name="arquivo" accept="image/*" required />
+                        <div class="form-text">Formatos permitidos: JPG, JPEG, PNG, GIF, BMP. Tamanho máximo: 5MB</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricaoImagem" class="form-label">Descrição (opcional)</label>
+                        <input type="text" class="form-control" id="descricaoImagem" name="descricao" maxlength="60" />
+                    </div>
+                    <div id="previewImagem" class="text-center mb-3" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 300px;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Imagem</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar imagem -->
+<div class="modal fade" id="modalVisualizarImagem" tabindex="-1" aria-labelledby="modalVisualizarImagemLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalVisualizarImagemLabel">Imagem do Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagemVisualizacao" src="" alt="Imagem do Produto" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="currentPedidoId" value="@Model.IdPedido" />
+<input type="hidden" id="currentPedidoProdutoId" value="" />
+
+@section Scripts {
+    <script>
+        let currentIdPedidoProduto = null;
+        let tamanhosData = [];
+
+        // Carregar grades quando produto for selecionado
+        $('#idProduto').on('change', function() {
+            const idProduto = $(this).val();
+            const $gradeSelect = $('#idGrade');
+            
+            if (idProduto) {
+                $gradeSelect.prop('disabled', false);
+                $gradeSelect.html('<option value="">Carregando...</option>');
+                
+                $.get('@Url.Action("GetGradesByProduto", "Pedidos")', { idProduto: idProduto })
+                    .done(function(grades) {
+                        $gradeSelect.html('<option value="">-- Selecione a Grade --</option>');
+                        grades.forEach(function(grade) {
+                            $gradeSelect.append($('<option></option>').val(grade.value).text(grade.text));
+                        });
+                    })
+                    .fail(function() {
+                        $gradeSelect.html('<option value="">Erro ao carregar grades</option>');
+                    });
+            } else {
+                $gradeSelect.prop('disabled', true);
+                $gradeSelect.html('<option value="">-- Selecione primeiro o Produto --</option>');
+            }
+        });
+
+        // Abrir modal de tamanhos
+        function abrirModalTamanhos(idPedidoProduto, idProduto, idGrade, idPedido) {
+            currentIdPedidoProduto = idPedidoProduto;
+            $('#currentPedidoProdutoId').val(idPedidoProduto);
+            
+            const container = $('#tamanhosContainer');
+            container.html('<p class="text-muted">Carregando tamanhos...</p>');
+            
+            $('#modalTamanhos').modal('show');
+            
+            $.get('@Url.Action("GetTamanhosByGrade", "Pedidos")', {
+                idPedido: idPedido,
+                idProduto: idProduto,
+                idGrade: idGrade,
+                idPedidoProduto: idPedidoProduto
+            })
+            .done(function(tamanhos) {
+                tamanhosData = tamanhos;
+                container.empty();
+                
+                if (tamanhos.length === 0) {
+                    container.html('<p class="text-muted">Nenhum tamanho disponível para esta grade.</p>');
+                    return;
+                }
+                
+                tamanhos.forEach(function(tamanho) {
+                    const isSelected = tamanho.sel === '1';
+                    const div = $('<div class="tamanho-item mb-3"></div>');
+                    
+                    const checkbox = $('<input>', {
+                        type: 'checkbox',
+                        class: 'form-check-input tamanho-checkbox',
+                        id: 'tamanho_' + tamanho.idGradeTamanho,
+                        'data-id': tamanho.idGradeTamanho,
+                        checked: isSelected
+                    });
+                    
+                    const label = $('<label>', {
+                        class: 'form-check-label',
+                        'for': 'tamanho_' + tamanho.idGradeTamanho,
+                        text: tamanho.tamanho
+                    });
+                    
+                    const quantidadeInput = $('<input>', {
+                        type: 'number',
+                        class: 'form-control quantidade-input mt-2',
+                        'data-id': tamanho.idGradeTamanho,
+                        value: tamanho.quantidade || 0,
+                        min: 0,
+                        style: 'width: 100px;',
+                        disabled: !isSelected
+                    });
+                    
+                    checkbox.on('change', function() {
+                        quantidadeInput.prop('disabled', !$(this).is(':checked'));
+                        if (!$(this).is(':checked')) {
+                            quantidadeInput.val(0);
+                        }
+                    });
+                    
+                    div.append($('<div class="form-check"></div>').append(checkbox).append(label));
+                    div.append($('<div class="mt-2"></div>').append($('<label class="form-label small">Quantidade:</label>')).append(quantidadeInput));
+                    
+                    container.append(div);
+                });
+            })
+            .fail(function() {
+                container.html('<p class="text-danger">Erro ao carregar tamanhos.</p>');
+            });
+        }
+
+        // Salvar tamanhos
+        function salvarTamanhos() {
+            const tamanhosSelecionados = [];
+            
+            $('.tamanho-checkbox:checked').each(function() {
+                const idGradeTamanho = $(this).data('id');
+                const quantidade = parseInt($('.quantidade-input[data-id="' + idGradeTamanho + '"]').val()) || 0;
+                
+                if (quantidade > 0) {
+                    tamanhosSelecionados.push({
+                        idGradeTamanho: idGradeTamanho,
+                        quantidade: quantidade,
+                        selecionado: true
+                    });
+                }
+            });
+            
+            const form = $('<form>', {
+                method: 'POST',
+                action: '@Url.Action("SalvarTamanhos", "Pedidos")'
+            });
+            
+            form.append($('<input>', { type: 'hidden', name: 'idPedido', value: $('#currentPedidoId').val() }));
+            form.append($('<input>', { type: 'hidden', name: 'idPedidoProduto', value: currentIdPedidoProduto }));
+            form.append($('<input>', { type: 'hidden', name: 'tamanhosJson', value: JSON.stringify(tamanhosSelecionados) }));
+            form.append($('<input>', { type: 'hidden', name: '__RequestVerificationToken', value: $('input[name="__RequestVerificationToken"]').first().val() }));
+            
+            $('body').append(form);
+            form.submit();
+        }
+
+        // Abrir modal de upload de imagem
+        function abrirModalUploadImagem(idPedidoProduto, idPedido) {
+            $('#uploadIdPedido').val(idPedido);
+            $('#uploadIdPedidoProduto').val(idPedidoProduto);
+            $('#arquivoImagem').val('');
+            $('#previewImagem').hide();
+            $('#modalUploadImagem').modal('show');
+        }
+
+        // Preview da imagem antes de enviar
+        $('#arquivoImagem').on('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#previewImg').attr('src', e.target.result);
+                    $('#previewImagem').show();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                $('#previewImagem').hide();
+            }
+        });
+
+        // Abrir modal para visualizar imagem em tamanho maior
+        function abrirModalImagem(idImagem) {
+            $('#imagemVisualizacao').attr('src', '@Url.Action("ExibirImagem", "Pedidos")?id=' + idImagem);
+            $('#modalVisualizarImagem').modal('show');
+        }
+    </script>
+}

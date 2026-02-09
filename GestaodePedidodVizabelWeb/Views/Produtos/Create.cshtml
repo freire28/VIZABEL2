@@ -1,0 +1,219 @@
+@model GestaoPedidosVizabel.Models.Produto
+@using GestaoPedidosVizabel.Models
+
+@{
+    ViewData["Title"] = "Novo Produto";
+    var csosnOptions = new Dictionary<string, string>
+    {
+        { "", "Selecione..." },
+        { "101", "101: Tributada com permissão de crédito do ICMS" },
+        { "102", "102: Tributada sem permissão de crédito" },
+        { "103", "103: Isenção de ICMS" },
+        { "300", "300: Imune" },
+        { "400", "400: Não tributada" },
+        { "500", "500: ICMS cobrado por substituição tributária" },
+        { "900", "900: Outros" }
+    };
+    var opcoesNcm = ViewBag.OpcoesNcm as List<TabelaIpt> ?? new List<TabelaIpt>();
+    var ncmPadrao = ViewBag.NcmPadrao as string ?? string.Empty;
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Cadastrar Novo Produto</h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" form="produtoForm" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" id="produtoForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Descricao" class="form-label"></label>
+                    <input asp-for="Descricao" class="form-control" placeholder="Descrição do produto" maxlength="200" />
+                    <span asp-validation-for="Descricao" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="PrazoEntrega" class="form-label"></label>
+                    <input asp-for="PrazoEntrega" class="form-control" type="number" min="0" placeholder="Dias" />
+                    <span asp-validation-for="PrazoEntrega" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Ncmsh" class="form-label"></label>
+                    <div class="input-group position-relative">
+                        <input asp-for="Ncmsh" class="form-control" id="Ncmsh" placeholder="Digite o código NCM ou busque..." maxlength="20" list="ncmList" autocomplete="off" />
+                        <button type="button" class="btn btn-outline-secondary" id="btnBuscarNcm" title="Buscar NCM">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <div id="ncmResults" class="list-group position-absolute w-100 mt-1" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;"></div>
+                    </div>
+                    <datalist id="ncmList">
+                        @if (opcoesNcm != null && opcoesNcm.Any())
+                        {
+                            @foreach (var ncm in opcoesNcm.Take(100))
+                            {
+                                <option value="@ncm.Codigo">@ncm.Codigo - @(ncm.Descricao ?? "")</option>
+                            }
+                        }
+                    </datalist>
+                    @if (!string.IsNullOrEmpty(ncmPadrao))
+                    {
+                        <small class="text-muted">Valor padrão sugerido: <strong>@ncmPadrao</strong></small>
+                    }
+                    <span asp-validation-for="Ncmsh" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Csosn" class="form-label"></label>
+                    <select asp-for="Csosn" class="form-select">
+                        @foreach (var option in csosnOptions)
+                        {
+                            <option value="@option.Key">@option.Value</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Csosn" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="form-check mb-2">
+                        <input type="hidden" name="Ativo" value="false" />
+                        <input type="checkbox" name="Ativo" value="true" class="form-check-input" id="Ativo" checked />
+                        <label class="form-check-label" for="Ativo">@Html.DisplayNameFor(m => m.Ativo)</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="hidden" name="FabricacaoTerceirizada" value="false" />
+                        <input type="checkbox" name="FabricacaoTerceirizada" value="true" class="form-check-input" id="FabricacaoTerceirizada" />
+                        <label class="form-check-label" for="FabricacaoTerceirizada">@Html.DisplayNameFor(m => m.FabricacaoTerceirizada)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            var ncmInput = $('#Ncmsh');
+            var ncmResults = $('#ncmResults');
+            var ncmPadrao = '@ncmPadrao';
+            var searchTimeout;
+
+            // Se não houver valor e existir um padrão, definir o padrão
+            if (!ncmInput.val() && ncmPadrao) {
+                ncmInput.val(ncmPadrao);
+            }
+
+            // Função para buscar NCM
+            function buscarNcm(term) {
+                if (!term || term.length < 2) {
+                    ncmResults.hide().empty();
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("BuscarNcm", "Produtos")',
+                    type: 'GET',
+                    data: { term: term },
+                    success: function(data) {
+                        ncmResults.empty();
+                        
+                        if (data && data.length > 0) {
+                            data.forEach(function(item) {
+                                var option = $('<a href="#" class="list-group-item list-group-item-action">')
+                                    .html('<strong>' + item.codigo + '</strong> - ' + (item.descricao || ''))
+                                    .on('click', function(e) {
+                                        e.preventDefault();
+                                        ncmInput.val(item.codigo);
+                                        ncmResults.hide();
+                                    });
+                                ncmResults.append(option);
+                            });
+                            ncmResults.show();
+                        } else {
+                            ncmResults.hide();
+                        }
+                    },
+                    error: function() {
+                        ncmResults.hide();
+                    }
+                });
+            }
+
+            // Buscar ao digitar (com debounce)
+            ncmInput.on('input', function() {
+                clearTimeout(searchTimeout);
+                var term = $(this).val();
+                
+                searchTimeout = setTimeout(function() {
+                    buscarNcm(term);
+                }, 300);
+            });
+
+            // Botão de busca
+            $('#btnBuscarNcm').on('click', function() {
+                var term = ncmInput.val();
+                if (term) {
+                    buscarNcm(term);
+                }
+            });
+
+            // Esconder resultados ao clicar fora
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#Ncmsh, #ncmResults').length) {
+                    ncmResults.hide();
+                }
+            });
+
+            // Esconder resultados ao pressionar Enter
+            ncmInput.on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    ncmResults.hide();
+                }
+            });
+        });
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

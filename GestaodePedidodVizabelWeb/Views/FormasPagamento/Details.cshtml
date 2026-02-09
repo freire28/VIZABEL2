@@ -1,0 +1,58 @@
+@model GestaoPedidosVizabel.Models.FormaPagamento
+
+@{
+    ViewData["Title"] = "Detalhes da Forma de Pagamento";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Detalhes da Forma de Pagamento</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Descricao)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Descricao)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+
+        <div class="mt-3">
+            <a asp-action="Edit" asp-route-id="@Model.IdFormapagamento" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

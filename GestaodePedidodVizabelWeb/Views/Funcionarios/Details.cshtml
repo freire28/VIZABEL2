@@ -1,0 +1,181 @@
+@model GestaoPedidosVizabel.Models.Funcionario
+@using GestaoPedidosVizabel.Models
+
+@{
+    ViewData["Title"] = "Detalhes do Funcionário";
+    var funcao = ViewBag.Funcao as Funcao;
+    var funcoesDisponiveis = ViewBag.FuncoesDisponiveis as List<Funcao> ?? new List<Funcao>();
+    var funcoesDoFuncionario = Model.FuncionarioFuncoes?.Select(ff => ff.IdFuncao).ToList() ?? new List<int>();
+    var funcoesParaAdicionar = funcoesDisponiveis.Where(f => !funcoesDoFuncionario.Contains(f.IdFuncao)).ToList();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Detalhes do Funcionário</h5>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.IdFuncionario" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nome)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Nome)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Celular)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Celular)</dd>
+
+            <dt class="col-sm-3">Função Principal</dt>
+            <dd class="col-sm-9">@(funcao != null ? funcao.Descricao : "-")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Pin)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Pin)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Vendedor)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Vendedor == true)
+                {
+                    <span class="badge bg-info">Sim</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Não</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-briefcase"></i> Funções do Funcionário
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="AdicionarFuncao" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idFuncionario" value="@Model.IdFuncionario" />
+                <div class="col-md-8">
+                    <label class="form-label">Adicionar Função</label>
+                    <select name="idFuncao" class="form-select" required>
+                        <option value="">Selecione uma função...</option>
+                        @foreach (var funcaoItem in funcoesParaAdicionar)
+                        {
+                            <option value="@funcaoItem.IdFuncao">@funcaoItem.Descricao</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100" @(funcoesParaAdicionar.Any() ? "" : "disabled")>
+                        <i class="bi bi-plus-circle"></i> Adicionar Função
+                    </button>
+                </div>
+            </form>
+            @if (!funcoesParaAdicionar.Any() && funcoesDisponiveis.Any())
+            {
+                <small class="text-muted">Todas as funções disponíveis já foram adicionadas a este funcionário.</small>
+            }
+            else if (!funcoesDisponiveis.Any())
+            {
+                <small class="text-muted">Não há funções ativas disponíveis no sistema.</small>
+            }
+        </div>
+
+        @if (Model.FuncionarioFuncoes != null && Model.FuncionarioFuncoes.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Função</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var funcionarioFuncao in Model.FuncionarioFuncoes.OrderBy(ff => ff.Funcao?.Descricao))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@funcionarioFuncao.Funcao?.Descricao</strong>
+                                </td>
+                                <td>
+                                    @if (funcionarioFuncao.Ativo)
+                                    {
+                                        <span class="badge bg-success">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="ToggleFuncaoAtivo" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idFuncionario" value="@Model.IdFuncionario" />
+                                        <input type="hidden" name="idFuncionarioFuncao" value="@funcionarioFuncao.IdFuncionarioFuncao" />
+                                        <button type="submit" class="btn btn-sm @(funcionarioFuncao.Ativo ? "btn-warning" : "btn-success")" 
+                                                title="@(funcionarioFuncao.Ativo ? "Desativar" : "Ativar")">
+                                            <i class="bi bi-@(funcionarioFuncao.Ativo ? "x-circle" : "check-circle")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="RemoverFuncao" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idFuncionario" value="@Model.IdFuncionario" />
+                                        <input type="hidden" name="idFuncionarioFuncao" value="@funcionarioFuncao.IdFuncionarioFuncao" />
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('Deseja realmente remover esta função do funcionário?');">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhuma função adicionada a este funcionário ainda.
+            </div>
+        }
+    </div>
+</div>
+

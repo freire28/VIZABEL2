@@ -1,0 +1,119 @@
+@model GestaoPedidosVizabel.Models.Cliente
+
+@{
+    ViewData["Title"] = "Detalhes do Cliente";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Detalhes do Cliente</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nomerazao)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Nomerazao)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.TipoPessoa)</dt>
+            <dd class="col-sm-9">@(Model.TipoPessoa ? "Pessoa Jurídica" : "Pessoa Física")</dd>
+
+            @if (!string.IsNullOrEmpty(Model.Fantasia))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Fantasia)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Fantasia)</dd>
+            }
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Cpfcnpj)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Cpfcnpj)</dd>
+
+            @if (!string.IsNullOrEmpty(Model.RgIe))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.RgIe)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.RgIe)</dd>
+            }
+
+            @if (Model.CodCliente.HasValue)
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.CodCliente)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.CodCliente)</dd>
+            }
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Email)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Email)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Fone)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Fone)</dd>
+
+            @if (!string.IsNullOrEmpty(Model.Whatsapp))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Whatsapp)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Whatsapp)</dd>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Contato))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Contato)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Contato)</dd>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.FoneContato))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FoneContato)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.FoneContato)</dd>
+            }
+
+            <hr />
+            <h6>Endereço</h6>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoLogradouro)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoLogradouro)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoNumero)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoNumero)</dd>
+
+            @if (!string.IsNullOrEmpty(Model.EnderecoComplemento))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoComplemento)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoComplemento)</dd>
+            }
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoBairro)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoBairro)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoCidade)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoCidade)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoUf)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoUf)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoCep)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoCep)</dd>
+
+            @if (!string.IsNullOrEmpty(Model.EnderecoIbge))
+            {
+                <dt class="col-sm-3">@Html.DisplayNameFor(model => model.EnderecoIbge)</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.EnderecoIbge)</dd>
+            }
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+
+        <div class="mt-3">
+            <a asp-action="Edit" asp-route-id="@Model.IdCliente" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>

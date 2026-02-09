@@ -1,0 +1,139 @@
+@model GestaoPedidosVizabel.Models.Grade
+@using GestaoPedidosVizabel.Models
+
+@{
+    ViewData["Title"] = "Detalhes da Grade";
+    var tamanhosDisponiveis = ViewBag.TamanhosDisponiveis as List<TamanhoProduto> ?? new List<TamanhoProduto>();
+    var tamanhosNaGrade = Model.GradeTamanhos?.Select(gt => gt.IdTamanho).ToList() ?? new List<int>();
+    var tamanhosParaAdicionar = tamanhosDisponiveis.Where(t => !tamanhosNaGrade.Contains(t.IdTamanhoproduto)).ToList();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Detalhes da Grade</h5>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.IdGrade" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Descricao)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Descricao)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo == true)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list-ul"></i> Tamanhos da Grade
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="AdicionarTamanho" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idGrade" value="@Model.IdGrade" />
+                <div class="col-md-8">
+                    <label class="form-label">Adicionar Tamanho</label>
+                    <select name="idTamanho" class="form-select" required>
+                        <option value="">Selecione um tamanho...</option>
+                        @foreach (var tamanho in tamanhosParaAdicionar)
+                        {
+                            <option value="@tamanho.IdTamanhoproduto">@tamanho.Tamanho</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100" @(tamanhosParaAdicionar.Any() ? "" : "disabled")>
+                        <i class="bi bi-plus-circle"></i> Adicionar Tamanho
+                    </button>
+                </div>
+            </form>
+            @if (!tamanhosParaAdicionar.Any() && tamanhosDisponiveis.Any())
+            {
+                <small class="text-muted">Todos os tamanhos disponíveis já foram adicionados a esta grade.</small>
+            }
+            else if (!tamanhosDisponiveis.Any())
+            {
+                <small class="text-muted">Não há tamanhos ativos disponíveis no sistema.</small>
+            }
+        </div>
+
+        @if (Model.GradeTamanhos != null && Model.GradeTamanhos.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tamanho</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var gradeTamanho in Model.GradeTamanhos.OrderBy(gt => gt.TamanhoProduto?.Tamanho))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@gradeTamanho.TamanhoProduto?.Tamanho</strong>
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="RemoverTamanho" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idGrade" value="@Model.IdGrade" />
+                                        <input type="hidden" name="idGradeTamanho" value="@gradeTamanho.IdGradeTamanho" />
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('Deseja realmente remover este tamanho da grade?');">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhum tamanho adicionado a esta grade ainda.
+            </div>
+        }
+    </div>
+</div>
+

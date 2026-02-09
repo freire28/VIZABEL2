@@ -1,0 +1,38 @@
+@model GestaoPedidosVizabel.Models.Cliente
+
+@{
+    ViewData["Title"] = "Excluir Cliente";
+}
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">Confirmar Exclusão</h5>
+    </div>
+    <div class="card-body">
+        <h6 class="text-danger">Tem certeza que deseja excluir este cliente?</h6>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nomerazao)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Nomerazao)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.TipoPessoa)</dt>
+            <dd class="col-sm-9">@(Model.TipoPessoa ? "Pessoa Jurídica" : "Pessoa Física")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Cpfcnpj)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Cpfcnpj)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Email)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Email)</dd>
+        </dl>
+
+        <form asp-action="Delete" class="mt-3">
+            <input type="hidden" asp-for="IdCliente" />
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Excluir
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>

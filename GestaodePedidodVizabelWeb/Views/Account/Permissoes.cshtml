@@ -1,0 +1,111 @@
+@model GestaoPedidosVizabel.Models.Usuario
+@{
+    ViewData["Title"] = "Permissões do Usuário";
+    var todasPermissoes = ViewBag.TodasPermissoes as List<GestaoPedidosVizabel.Models.Permissao>;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Permissões - @Model.Nome</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Administrador)
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Este usuário é administrador e possui todas as permissões.
+            </div>
+        }
+        else
+        {
+            <form id="formPermissoes" method="post" asp-action="SalvarPermissoes">
+                <input type="hidden" name="idUsuario" value="@Model.IdUsuario" />
+                @Html.AntiForgeryToken()
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Controller</th>
+                                <th>Ação</th>
+                                <th class="text-center">Visualizar</th>
+                                <th class="text-center">Incluir</th>
+                                <th class="text-center">Alterar</th>
+                                <th class="text-center">Excluir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var permissao in todasPermissoes!)
+                            {
+                                var usuarioPermissao = Model.UsuarioPermissoes.FirstOrDefault(up => up.IdPermissao == permissao.IdPermissao);
+                                <tr>
+                                    <td>@permissao.Controller</td>
+                                    <td>@permissao.Acao</td>
+                                    <td class="text-center">
+                                        <input type="checkbox" 
+                                               name="permissoes[@permissao.IdPermissao][visualizar]" 
+                                               value="true"
+                                               @(usuarioPermissao?.PodeVisualizar == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" 
+                                               name="permissoes[@permissao.IdPermissao][incluir]" 
+                                               value="true"
+                                               @(usuarioPermissao?.PodeIncluir == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" 
+                                               name="permissoes[@permissao.IdPermissao][alterar]" 
+                                               value="true"
+                                               @(usuarioPermissao?.PodeAlterar == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" 
+                                               name="permissoes[@permissao.IdPermissao][excluir]" 
+                                               value="true"
+                                               @(usuarioPermissao?.PodeExcluir == true ? "checked" : "") />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Salvar Permissões
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

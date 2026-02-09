@@ -1,0 +1,194 @@
+@model GestaoPedidosVizabel.Models.NFeItem
+
+@{
+    ViewData["Title"] = "Adicionar Produto à NF-e";
+    var idNfe = ViewBag.IdNfe as long? ?? 0;
+    var numeroNfe = ViewBag.NumeroNfe as string ?? "";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-box-seam"></i> Adicionar Produto à NF-e @numeroNfe
+            </h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@idNfe" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="AddItem" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="IdNfe" value="@idNfe" />
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Dados do Produto -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-box"></i> Dados do Produto</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="CodProduto" class="form-label"></label>
+                            <input asp-for="CodProduto" class="form-control" maxlength="60" required />
+                            <span asp-validation-for="CodProduto" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Descricao" class="form-label"></label>
+                            <input asp-for="Descricao" class="form-control" maxlength="200" required />
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Unidade" class="form-label"></label>
+                            <input asp-for="Unidade" class="form-control" maxlength="10" required />
+                            <span asp-validation-for="Unidade" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Ncm" class="form-label"></label>
+                            <input asp-for="Ncm" class="form-control" maxlength="8" required />
+                            <span asp-validation-for="Ncm" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Cfop" class="form-label"></label>
+                            <input asp-for="Cfop" class="form-control" maxlength="4" required />
+                            <span asp-validation-for="Cfop" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="Quantidade" class="form-label"></label>
+                            <input asp-for="Quantidade" class="form-control" type="number" step="0.0001" required />
+                            <span asp-validation-for="Quantidade" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="ValorUnitario" class="form-label"></label>
+                            <input asp-for="ValorUnitario" class="form-control" type="number" step="0.0001" id="valorUnitario" required />
+                            <span asp-validation-for="ValorUnitario" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label asp-for="ValorTotal" class="form-label"></label>
+                            <input asp-for="ValorTotal" class="form-control" type="number" step="0.01" id="valorTotal" readonly />
+                            <span asp-validation-for="ValorTotal" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados dos Impostos -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-receipt-cutoff"></i> Dados dos Impostos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 mb-3">
+                            <label for="Imposto_Origem" class="form-label">Origem</label>
+                            <input type="number" class="form-control" id="Imposto_Origem" name="Imposto.Origem" value="0" min="0" max="255" required />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="Imposto_CstCsosn" class="form-label">CST/CSOSN</label>
+                            <input type="text" class="form-control" id="Imposto_CstCsosn" name="Imposto.CstCsosn" maxlength="3" required />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="Imposto_BaseIcms" class="form-label">Base ICMS</label>
+                            <input type="number" class="form-control" id="Imposto_BaseIcms" name="Imposto.BaseIcms" value="0" step="0.01" required />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="Imposto_AliquotaIcms" class="form-label">Alíquota ICMS (%)</label>
+                            <input type="number" class="form-control" id="Imposto_AliquotaIcms" name="Imposto.AliquotaIcms" value="0" step="0.01" required />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="Imposto_ValorIcms" class="form-label">Valor ICMS</label>
+                            <input type="number" class="form-control" id="Imposto_ValorIcms" name="Imposto.ValorIcms" value="0" step="0.01" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="Imposto_BasePis" class="form-label">Base PIS</label>
+                            <input type="number" class="form-control" id="Imposto_BasePis" name="Imposto.BasePis" step="0.01" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="Imposto_ValorPis" class="form-label">Valor PIS</label>
+                            <input type="number" class="form-control" id="Imposto_ValorPis" name="Imposto.ValorPis" step="0.01" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="Imposto_BaseCofins" class="form-label">Base COFINS</label>
+                            <input type="number" class="form-control" id="Imposto_BaseCofins" name="Imposto.BaseCofins" step="0.01" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="Imposto_ValorCofins" class="form-label">Valor COFINS</label>
+                            <input type="number" class="form-control" id="Imposto_ValorCofins" name="Imposto.ValorCofins" step="0.01" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Edit" asp-route-id="@idNfe" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Produto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Calcular valor total automaticamente
+        document.getElementById('valorUnitario')?.addEventListener('input', calcularValorTotal);
+        document.getElementById('Quantidade')?.addEventListener('input', calcularValorTotal);
+
+        function calcularValorTotal() {
+            const quantidade = parseFloat(document.getElementById('Quantidade').value) || 0;
+            const valorUnitario = parseFloat(document.getElementById('valorUnitario').value) || 0;
+            const valorTotal = quantidade * valorUnitario;
+            
+            document.getElementById('valorTotal').value = valorTotal.toFixed(2);
+        }
+
+        // Calcular ICMS automaticamente
+        document.getElementById('Imposto_BaseIcms')?.addEventListener('input', calcularICMS);
+        document.getElementById('Imposto_AliquotaIcms')?.addEventListener('input', calcularICMS);
+
+        function calcularICMS() {
+            const baseIcms = parseFloat(document.getElementById('Imposto_BaseIcms').value) || 0;
+            const aliquotaIcms = parseFloat(document.getElementById('Imposto_AliquotaIcms').value) || 0;
+            const valorIcms = (baseIcms * aliquotaIcms) / 100;
+            
+            document.getElementById('Imposto_ValorIcms').value = valorIcms.toFixed(2);
+        }
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

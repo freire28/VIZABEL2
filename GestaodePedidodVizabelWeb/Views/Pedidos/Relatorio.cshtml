@@ -1,0 +1,182 @@
+@model IEnumerable<GestaoPedidosVizabel.Models.Pedido>
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Relatório de Pedidos";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Relatório de Pedidos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+        .no-print {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="gerarPDF()" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+            📄 Gerar Relatório
+        </button>
+    </div>
+    <div id="conteudo-relatorio">
+    <div class="header">
+        <h1>Relatório de Pedidos</h1>
+        <p>Gestão de Pedidos Vizabel</p>
+        <p>Gerado em: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Data Pedido</th>
+                <th>Data Entrega</th>
+                <th>Status</th>
+                <th>Vendedor</th>
+                <th>Forma Pagamento</th>
+                <th>Ativo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.CodPedido</td>
+                    <td>@(item.Cliente?.Nomerazao ?? "N/A")</td>
+                    <td>@item.DataPedido.ToString("dd/MM/yyyy")</td>
+                    <td>@item.DataEntrega.ToString("dd/MM/yyyy")</td>
+                    <td>@(item.StatusPedido?.Descricao ?? "N/A")</td>
+                    <td>@(item.Vendedor?.Nome ?? "-")</td>
+                    <td>@(item.FormaPagamento?.Descricao ?? "-")</td>
+                    <td>
+                        @if (item.Ativo)
+                        {
+                            <span class="badge badge-success">Ativo</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Inativo</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Total de pedidos: @Model.Count()</p>
+        <p>© @DateTime.Now.Year - Gestão de Pedidos Vizabel</p>
+    </div>
+    </div>
+
+    <script>
+        function gerarPDF() {
+            const elemento = document.getElementById('conteudo-relatorio');
+            const botao = document.querySelector('.no-print');
+            
+            // Ocultar botão temporariamente
+            botao.style.display = 'none';
+            
+            const opcoes = {
+                margin: [10, 10, 10, 10],
+                filename: 'RelatorioPedidos_@(DateTime.Now.ToString("yyyyMMddHHmmss")).pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Gerar PDF como blob e abrir em nova aba
+            html2pdf().set(opcoes).from(elemento).outputPdf('blob').then(function(pdfBlob) {
+                // Criar URL do blob
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                
+                // Abrir em nova aba
+                window.open(pdfUrl, '_blank');
+                
+                // Mostrar botão novamente
+                botao.style.display = 'block';
+                
+                // Limpar URL do blob após um tempo
+                setTimeout(function() {
+                    URL.revokeObjectURL(pdfUrl);
+                }, 100);
+            }).catch(function(error) {
+                console.error('Erro ao gerar PDF:', error);
+                botao.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>
+

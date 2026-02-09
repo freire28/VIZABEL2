@@ -1,0 +1,141 @@
+@model GestaoPedidosVizabel.Models.Pedido
+
+@{
+    ViewData["Title"] = "Novo Pedido";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Cadastrar Novo Pedido</h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a id="btnGerarNFe" asp-controller="NFe" asp-action="Create" class="btn btn-success btn-sm" style="display: none;" target="_blank">
+                    <i class="bi bi-receipt"></i> Gerar NFe
+                </a>
+                <button type="submit" form="pedidoForm" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" id="pedidoForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="row">
+                <div class="col-md-9 mb-3">
+                    <label asp-for="IdCliente" class="form-label"></label>
+                    <select asp-for="IdCliente" class="form-select" asp-items="ViewBag.Clientes">
+                        <option value="">-- Selecione o Cliente --</option>
+                    </select>
+                    <span asp-validation-for="IdCliente" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label asp-for="IdStatuspedido" class="form-label"></label>
+                    <select asp-for="IdStatuspedido" class="form-select" asp-items="ViewBag.StatusPedidos">
+                        <option value="">-- Selecione o Status --</option>
+                    </select>
+                    <span asp-validation-for="IdStatuspedido" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label asp-for="DataPedido" class="form-label"></label>
+                    <input asp-for="DataPedido" class="form-control" type="date" />
+                    <span asp-validation-for="DataPedido" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label asp-for="DataEntrega" class="form-label"></label>
+                    <input asp-for="DataEntrega" class="form-control" type="date" />
+                    <span asp-validation-for="DataEntrega" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label asp-for="IdVendedor" class="form-label"></label>
+                    <select asp-for="IdVendedor" class="form-select" asp-items="ViewBag.Vendedores">
+                        <option value="">-- Selecione o Vendedor --</option>
+                    </select>
+                    <span asp-validation-for="IdVendedor" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label asp-for="IdFormapagamento" class="form-label"></label>
+                    <select asp-for="IdFormapagamento" class="form-select" asp-items="ViewBag.FormasPagamento">
+                        <option value="">-- Selecione a Forma de Pagamento --</option>
+                    </select>
+                    <span asp-validation-for="IdFormapagamento" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Observacoes" class="form-label"></label>
+                    <textarea asp-for="Observacoes" class="form-control" rows="3" maxlength="1000"></textarea>
+                    <span asp-validation-for="Observacoes" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="hidden" name="Ativo" value="false" />
+                        <input type="checkbox" name="Ativo" value="true" class="form-check-input" id="Ativo" checked />
+                        <label class="form-check-label" for="Ativo">@Html.DisplayNameFor(m => m.Ativo)</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="hidden" name="EmitirNfe" value="false" />
+                        <input type="checkbox" name="EmitirNfe" value="true" class="form-check-input" id="EmitirNfe" />
+                        <label class="form-check-label" for="EmitirNfe">@Html.DisplayNameFor(m => m.EmitirNfe)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Mostrar/ocultar botão Gerar NFe baseado no checkbox EmitirNfe
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxEmitirNfe = document.getElementById('EmitirNfe');
+            const btnGerarNFe = document.getElementById('btnGerarNFe');
+            
+            function atualizarVisibilidadeBotao() {
+                if (checkboxEmitirNfe && btnGerarNFe) {
+                    if (checkboxEmitirNfe.checked) {
+                        btnGerarNFe.style.display = 'inline-block';
+                    } else {
+                        btnGerarNFe.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Verificar estado inicial (checkbox não marcado por padrão na criação)
+            atualizarVisibilidadeBotao();
+            
+            // Adicionar listener para mudanças no checkbox
+            if (checkboxEmitirNfe) {
+                checkboxEmitirNfe.addEventListener('change', atualizarVisibilidadeBotao);
+            }
+        });
+    </script>
+}
+

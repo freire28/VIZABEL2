@@ -1,0 +1,103 @@
+@model IEnumerable<GestaoPedidosVizabel.Models.Funcionario>
+
+@{
+    ViewData["Title"] = "Funcionários";
+    var funcoesDict = ViewBag.FuncoesDict as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Lista de Funcionários</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Novo Funcionário
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>@Html.DisplayNameFor(model => model.Nome)</th>
+                        <th>@Html.DisplayNameFor(model => model.Celular)</th>
+                        <th>@Html.DisplayNameFor(model => model.FuncaoPrincipal)</th>
+                        <th>@Html.DisplayNameFor(model => model.Vendedor)</th>
+                        <th>@Html.DisplayNameFor(model => model.Ativo)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@Html.DisplayFor(modelItem => item.Nome)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Celular)</td>
+                            <td>@(item.FuncaoPrincipal.HasValue && funcoesDict.ContainsKey(item.FuncaoPrincipal.Value) ? funcoesDict[item.FuncaoPrincipal.Value] : "-")</td>
+                            <td>
+                                @if (item.Vendedor == true)
+                                {
+                                    <span class="badge bg-info">Sim</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Não</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.Ativo)
+                                {
+                                    <span class="badge bg-success">Ativo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inativo</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@item.IdFuncionario" class="btn btn-sm btn-info" title="Detalhes">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.IdFuncionario" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.IdFuncionario" class="btn btn-sm btn-danger" title="Excluir">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

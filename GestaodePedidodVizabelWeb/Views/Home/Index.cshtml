@@ -1,0 +1,63 @@
+@{
+    ViewData["Title"] = "Início";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Bem-vindo ao Sistema de Gestão de Pedidos Vizabel</h5>
+            </div>
+            <div class="card-body">                
+                <div class="row mt-4">
+                    @if (ViewBag.CanViewPedidos == true)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <a asp-controller="Pedidos" asp-action="Index" class="text-decoration-none">
+                                <div class="card text-center h-100 card-hover">
+                                    <div class="card-body">
+                                        <i class="bi bi-cart-check fs-1 text-primary"></i>
+                                        <h5 class="card-title mt-3">Pedidos</h5>
+                                        <p class="card-text">Gerencie todos os pedidos do sistema</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                    @if (ViewBag.CanViewClientes == true)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <a asp-controller="Clientes" asp-action="Index" class="text-decoration-none">
+                                <div class="card text-center h-100 card-hover">
+                                    <div class="card-body">
+                                        <i class="bi bi-people fs-1 text-success"></i>
+                                        <h5 class="card-title mt-3">Clientes</h5>
+                                        <p class="card-text">Cadastre e gerencie clientes</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                    @if (ViewBag.CanViewProdutos == true)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <a asp-controller="Produtos" asp-action="Index" class="text-decoration-none">
+                                <div class="card text-center h-100 card-hover">
+                                    <div class="card-body">
+                                        <i class="bi bi-box fs-1 text-info"></i>
+                                        <h5 class="card-title mt-3">Produtos</h5>
+                                        <p class="card-text">Controle de estoque e produtos</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

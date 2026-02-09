@@ -1,0 +1,81 @@
+@model GestaoPedidosVizabel.Models.Funcionario
+@using GestaoPedidosVizabel.Models
+
+@{
+    ViewData["Title"] = "Excluir Funcionário";
+    var funcao = ViewBag.Funcao as Funcao;
+}
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">Confirmar Exclusão</h5>
+    </div>
+    <div class="card-body">
+        <h6 class="text-danger">Tem certeza que deseja excluir este funcionário?</h6>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Nome)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Nome)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Celular)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Celular)</dd>
+
+            <dt class="col-sm-3">Função Principal</dt>
+            <dd class="col-sm-9">@(funcao != null ? funcao.Descricao : "-")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Vendedor)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Vendedor == true)
+                {
+                    <span class="badge bg-info">Sim</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Não</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+
+        <form asp-action="Delete" class="mt-3">
+            <input type="hidden" asp-for="IdFuncionario" />
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Excluir
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

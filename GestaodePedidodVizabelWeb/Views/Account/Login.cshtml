@@ -1,0 +1,109 @@
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Gestão de Pedidos Vizabel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">Gestão de Pedidos Vizabel</h3>
+                        <h5 class="text-center text-muted mb-4">Login</h5>
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <div>@error.ErrorMessage</div>
+                                }
+                            </div>
+                        }
+
+                        <form method="post" asp-action="Login">
+                            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                            @Html.AntiForgeryToken()
+                            
+                            <div class="mb-3">
+                                <label for="login" class="form-label">Login</label>
+                                <input type="text" class="form-control" id="login" name="login" autocomplete="username" required autofocus />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="senha" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="senha" name="senha" autocomplete="current-password" required />
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Entrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* Garantir que não há overlays visíveis na página de login */
+        .sidebar-overlay,
+        .modal-backdrop,
+        [class*="overlay"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        
+        body {
+            overflow: auto !important;
+        }
+        
+        body.modal-open {
+            overflow: auto !important;
+        }
+    </style>
+    <script>
+        // Garantir que não há overlays ativos
+        (function() {
+            // Remover qualquer overlay que possa existir
+            function removeOverlays() {
+                const overlays = document.querySelectorAll('.sidebar-overlay, .modal-backdrop, [class*="overlay"]');
+                overlays.forEach(function(overlay) {
+                    overlay.style.display = 'none';
+                    overlay.style.visibility = 'hidden';
+                    overlay.style.opacity = '0';
+                    overlay.classList.remove('show');
+                });
+                
+                // Remover classes que podem causar bloqueio
+                document.body.style.overflow = 'auto';
+                document.body.classList.remove('modal-open');
+            }
+            
+            // Executar imediatamente
+            removeOverlays();
+            
+            // Executar quando DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeOverlays);
+            } else {
+                removeOverlays();
+            }
+            
+            // Executar após um pequeno delay para garantir
+            setTimeout(removeOverlays, 100);
+        })();
+    </script>
+</body>
+</html>
+

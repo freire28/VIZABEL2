@@ -1,0 +1,1252 @@
+@model GestaoPedidosVizabel.Models.ViewModels.NFeEditViewModel
+
+@{
+    ViewData["Title"] = "Editar NF-e";
+}
+
+<div class="card">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 text-primary">Editar NF-e</h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" form="nfeForm" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+                <button type="button" class="btn btn-success btn-sm" id="btnTransmitirNFe" data-id="@Model.IdNfe">
+                    <i class="bi bi-send"></i> Transmitir NFe
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" id="nfeForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="IdNfe" />
+            <input type="hidden" asp-for="IdEmpresa" />
+            
+            <!-- Cabeçalho da Nota Fiscal -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0 text-primary">
+                        <i class="bi bi-file-earmark-text"></i> Cabeçalho da Nota Fiscal
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Primeira Linha: Identificação Básica -->
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label asp-for="Modelo" class="form-label"></label>
+                            <input asp-for="Modelo" class="form-control bg-light" maxlength="2" readonly />
+                            <span asp-validation-for="Modelo" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="Serie" class="form-label"></label>
+                            <input asp-for="Serie" class="form-control bg-light" type="number" readonly />
+                            <span asp-validation-for="Serie" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="Numero" class="form-label"></label>
+                            <input asp-for="Numero" class="form-control" type="number" />
+                            <span asp-validation-for="Numero" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="Status" class="form-label"></label>
+                            <input asp-for="Status" class="form-control bg-light" maxlength="20" placeholder="Ex: Autorizada" readonly />
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="RegimeTributario" class="form-label"></label>
+                            <input type="text" class="form-control bg-light" value="@ViewBag.RegimeTributarioDescricao" readonly />
+                            <input type="hidden" asp-for="RegimeTributario" />
+                            <span asp-validation-for="RegimeTributario" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Linha: Pedido -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="IdPedido" class="form-label"></label>
+                            <select asp-for="IdPedido" class="form-select" asp-items="ViewBag.Pedidos">
+                                <option value="">Selecione um pedido (opcional)</option>
+                            </select>
+                            <span asp-validation-for="IdPedido" class="text-danger"></span>
+                            <small class="text-muted">Opcional: Relacione esta NF-e a um pedido existente</small>
+                        </div>
+                    </div>
+
+                    <!-- Segunda Linha: Natureza da Operação -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label asp-for="NaturezaOperacao" class="form-label"></label>
+                            <select asp-for="NaturezaOperacao" class="form-select" asp-items="ViewBag.NaturezasOperacao">
+                                <option value="">Selecione uma natureza de operação...</option>
+                            </select>
+                            <span asp-validation-for="NaturezaOperacao" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Terceira Linha: Datas e Tipos -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label asp-for="DataEmissao" class="form-label"></label>
+                            <input asp-for="DataEmissao" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="DataEmissao" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="DataSaida" class="form-label"></label>
+                            <input asp-for="DataSaida" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="DataSaida" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="TipoNfe" class="form-label"></label>
+                            <select asp-for="TipoNfe" class="form-select">
+                                <option value="0">0 - Entrada</option>
+                                <option value="1">1 - Saída</option>
+                            </select>
+                            <span asp-validation-for="TipoNfe" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="Finalidade" class="form-label"></label>
+                            <select asp-for="Finalidade" class="form-select">
+                                <option value="1">1 - Normal</option>
+                                <option value="2">2 - Complementar</option>
+                                <option value="3">3 - Ajuste</option>
+                                <option value="4">4 - Devolução</option>
+                            </select>
+                            <span asp-validation-for="Finalidade" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Quarta Linha: Valores -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ValorProdutos" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="hidden" asp-for="ValorProdutos" id="valorProdutosHidden" />
+                                <input class="form-control bg-light" type="text" id="valorProdutos" readonly style="font-weight: bold;" />
+                            </div>
+                            <span asp-validation-for="ValorProdutos" class="text-danger"></span>
+                            <small class="text-muted">Calculado automaticamente pela soma dos itens</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ValorTotalNfe" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="hidden" asp-for="ValorTotalNfe" id="valorTotalNfeHidden" />
+                                <input class="form-control bg-light" type="text" id="valorTotalNfe" readonly style="font-weight: bold;" />
+                            </div>
+                            <span asp-validation-for="ValorTotalNfe" class="text-danger"></span>
+                            <small class="text-muted">Calculado automaticamente (produtos + impostos)</small>
+                        </div>
+                    </div>
+
+                    <!-- Quinta Linha: Chave de Acesso -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label asp-for="ChaveAcesso" class="form-label"></label>
+                            <input asp-for="ChaveAcesso" class="form-control" maxlength="255" placeholder="Chave de acesso da NF-e (44 ou 255 caracteres)" />
+                            <span asp-validation-for="ChaveAcesso" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas: Destinatário e Produtos -->
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="nfeEditTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="destinatario-tab" data-bs-toggle="tab" data-bs-target="#destinatario" type="button" role="tab" aria-controls="destinatario" aria-selected="true">
+                                <i class="bi bi-person"></i> Destinatário
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos" type="button" role="tab" aria-controls="produtos" aria-selected="false">
+                                <i class="bi bi-box-seam"></i> Produtos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pagamentos-tab" data-bs-toggle="tab" data-bs-target="#pagamentos" type="button" role="tab" aria-controls="pagamentos" aria-selected="false">
+                                <i class="bi bi-credit-card"></i> Pagamentos
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="nfeEditTabsContent">
+                        <!-- Aba Destinatário -->
+                        <div class="tab-pane fade show active" id="destinatario" role="tabpanel" aria-labelledby="destinatario-tab">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="Destinatario_Nome" class="form-label">Nome</label>
+                                    <input type="text" class="form-control" id="Destinatario_Nome" name="Destinatario.Nome" value="@(Model.Destinatario?.Nome ?? "")" maxlength="150" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="Destinatario_CnpjCpf" class="form-label">CNPJ/CPF</label>
+                                    <input type="text" class="form-control" id="Destinatario_CnpjCpf" name="Destinatario.CnpjCpf" value="@(Model.Destinatario?.CnpjCpf ?? "")" maxlength="14" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="Destinatario_IndIeDest" class="form-label">Indicador IE</label>
+                                    @{
+                                        var indIeDest = Model.Destinatario?.IndIeDest ?? 1;
+                                    }
+                                    <select class="form-select" id="Destinatario_IndIeDest" name="Destinatario.IndIeDest" required>
+                                        @if (indIeDest == 1)
+                                        {
+                                            <option value="1" selected>1 - Contribuinte</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="1">1 - Contribuinte</option>
+                                        }
+                                        @if (indIeDest == 2)
+                                        {
+                                            <option value="2" selected>2 - Isento</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="2">2 - Isento</option>
+                                        }
+                                        @if (indIeDest == 9)
+                                        {
+                                            <option value="9" selected>9 - Não Contribuinte</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="9">9 - Não Contribuinte</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label for="Destinatario_Ie" class="form-label">Inscrição Estadual</label>
+                                    <input type="text" class="form-control" id="Destinatario_Ie" name="Destinatario.Ie" value="@(Model.Destinatario?.Ie ?? "")" maxlength="20" />
+                                </div>
+                            </div>
+
+                            <h6 class="mt-3 mb-3 text-primary">Endereço</h6>
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="Destinatario_Logradouro" class="form-label">Logradouro</label>
+                                    <input type="text" class="form-control" id="Destinatario_Logradouro" name="Destinatario.Logradouro" value="@(Model.Destinatario?.Logradouro ?? "")" maxlength="150" required />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="Destinatario_Numero" class="form-label">Número</label>
+                                    <input type="text" class="form-control" id="Destinatario_Numero" name="Destinatario.Numero" value="@(Model.Destinatario?.Numero ?? "")" maxlength="10" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="Destinatario_Bairro" class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" id="Destinatario_Bairro" name="Destinatario.Bairro" value="@(Model.Destinatario?.Bairro ?? "")" maxlength="100" required />
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="Destinatario_CodMun" class="form-label">Código Município</label>
+                                    <input type="number" class="form-control" id="Destinatario_CodMun" name="Destinatario.CodMun" value="@(Model.Destinatario?.CodMun ?? 0)" required />
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="Destinatario_Cep" class="form-label">CEP</label>
+                                    <input type="text" class="form-control" id="Destinatario_Cep" name="Destinatario.Cep" value="@(Model.Destinatario?.Cep ?? "")" maxlength="8" required />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="Destinatario_Municipio" class="form-label">Município</label>
+                                    <input type="text" class="form-control" id="Destinatario_Municipio" name="Destinatario.Municipio" value="@(Model.Destinatario?.Municipio ?? "")" maxlength="100" required />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="Destinatario_Uf" class="form-label">UF</label>
+                                    <input type="text" class="form-control" id="Destinatario_Uf" name="Destinatario.Uf" value="@(Model.Destinatario?.Uf ?? "")" maxlength="2" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aba Produtos -->
+                        <div class="tab-pane fade" id="produtos" role="tabpanel" aria-labelledby="produtos-tab">
+                            <!-- Botão para tela de cadastro de produto -->
+                            <div class="mb-3">
+                                <a asp-action="AddItem" asp-route-id="@Model.IdNfe" class="btn btn-success">
+                                    <i class="bi bi-plus-circle"></i> Adicionar Novo Produto
+                                </a>
+                            </div>
+
+                            <!-- Formulário para adicionar novo produto -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-primary"><i class="bi bi-plus-circle"></i> Adicionar Produto Rápido</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Código do Produto</label>
+                                            <input type="text" class="form-control form-control-sm" id="novoCodProduto" maxlength="60" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Descrição</label>
+                                            <input type="text" class="form-control form-control-sm" id="novaDescricao" maxlength="200" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">NCM</label>
+                                            <input type="text" class="form-control form-control-sm" id="novoNcm" maxlength="8" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">CFOP</label>
+                                            <input type="text" class="form-control form-control-sm" id="novoCfop" maxlength="4" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Unidade</label>
+                                            <input type="text" class="form-control form-control-sm" id="novaUnidade" maxlength="10" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Quantidade</label>
+                                            <input type="number" class="form-control form-control-sm" id="novaQuantidade" step="1" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label small">Valor Unitário</label>
+                                            <input type="number" class="form-control form-control-sm" id="novoValorUnitario" step="0.01" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">&nbsp;</label>
+                                            <button type="button" class="btn btn-success btn-sm w-100" id="btnAdicionarProduto">
+                                                <i class="bi bi-plus"></i> Adicionar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabela de produtos -->
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabelaProdutos">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descrição</th>
+                                            <th>NCM</th>
+                                            <th>CFOP</th>
+                                            <th>Unidade</th>
+                                            <th class="text-end">Quantidade</th>
+                                            <th class="text-end">Valor Unitário</th>
+                                            <th class="text-end">Valor Total</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyProdutos">
+                                        @{
+                                            int itemIndex = 0;
+                                        }
+                                        @if (Model.Itens != null && Model.Itens.Any())
+                                        {
+                                            @foreach (var item in Model.Itens)
+                                            {
+                                                <tr data-item-id="@item.IdItem">
+                                                    <td>@item.CodProduto</td>
+                                                    <td>@item.Descricao</td>
+                                                    <td>@item.Ncm</td>
+                                                    <td>@item.Cfop</td>
+                                                    <td>@item.Unidade</td>
+                                                    <td class="text-end">@item.Quantidade.ToString("F0")</td>
+                                                    <td class="text-end">
+                                                        <input type="number" class="form-control form-control-sm text-end valor-unitario-input" 
+                                                               name="Itens[@itemIndex].ValorUnitario" 
+                                                               value="@item.ValorUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" 
+                                                               step="0.01" 
+                                                               data-item-index="@itemIndex" 
+                                                               style="min-width: 100px;" />
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <input type="number" class="form-control form-control-sm text-end valor-total-input" 
+                                                               name="Itens[@itemIndex].ValorTotal" 
+                                                               value="@item.ValorTotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" 
+                                                               step="0.01" 
+                                                               data-item-index="@itemIndex" 
+                                                               style="min-width: 120px;" />
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="hidden" name="Itens[@itemIndex].IdItem" value="@item.IdItem" class="item-id-field" />
+                                                        <input type="hidden" name="Itens[@itemIndex].IdNfe" value="@item.IdNfe" />
+                                                        <input type="hidden" name="Itens[@itemIndex].CodProduto" value="@item.CodProduto" />
+                                                        <input type="hidden" name="Itens[@itemIndex].Descricao" value="@item.Descricao" />
+                                                        <input type="hidden" name="Itens[@itemIndex].Ncm" value="@item.Ncm" />
+                                                        <input type="hidden" name="Itens[@itemIndex].Cfop" value="@item.Cfop" />
+                                                        <input type="hidden" name="Itens[@itemIndex].Unidade" value="@item.Unidade" />
+                                                        <input type="hidden" name="Itens[@itemIndex].Quantidade" value="@item.Quantidade" />
+                                                        <button type="button" class="btn btn-danger btn-sm btn-remover-item" data-item-id="@item.IdItem">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr class="table-light" data-item-id="@item.IdItem">
+                                                    <td colspan="9" class="p-0">
+                                                        <div class="p-3">
+                                                            <h6 class="mb-3 text-primary"><i class="bi bi-receipt-cutoff"></i> Impostos do Item</h6>
+                                                            <input type="hidden" name="Itens[@itemIndex].Imposto.IdImposto" value="@(item.Imposto?.IdImposto ?? 0)" />
+                                                            <input type="hidden" name="Itens[@itemIndex].Imposto.IdItem" value="@item.IdItem" />
+                                                            
+                                                            <div class="row g-3">
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Origem</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.Origem" 
+                                                                           value="@(item.Imposto?.Origem ?? 0)" 
+                                                                           min="0" 
+                                                                           max="255" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">CST/CSOSN</label>
+                                                                    <input type="text" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.CstCsosn" 
+                                                                           value="@(item.Imposto?.CstCsosn ?? "")" 
+                                                                           maxlength="3" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Base ICMS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.BaseIcms" 
+                                                                           value="@(item.Imposto?.BaseIcms ?? 0)" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Alíquota ICMS (%)</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.AliquotaIcms" 
+                                                                           value="@(item.Imposto?.AliquotaIcms ?? 0)" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Valor ICMS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.ValorIcms" 
+                                                                           value="@(item.Imposto?.ValorIcms ?? 0)" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Base PIS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.BasePis" 
+                                                                           value="@(item.Imposto?.BasePis?.ToString() ?? "")" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Valor PIS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.ValorPis" 
+                                                                           value="@(item.Imposto?.ValorPis?.ToString() ?? "")" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Base COFINS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.BaseCofins" 
+                                                                           value="@(item.Imposto?.BaseCofins?.ToString() ?? "")" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small">Valor COFINS</label>
+                                                                    <input type="number" 
+                                                                           class="form-control form-control-sm" 
+                                                                           name="Itens[@itemIndex].Imposto.ValorCofins" 
+                                                                           value="@(item.Imposto?.ValorCofins?.ToString() ?? "")" 
+                                                                           step="0.01" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                itemIndex++;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr id="mensagemSemProdutos">
+                                                <td colspan="9" class="text-center py-4">
+                                                    <div class="alert alert-info mb-0">
+                                                        <i class="bi bi-info-circle"></i> Nenhum produto cadastrado. Use o formulário acima para adicionar produtos.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="7" class="text-end"><strong>Total:</strong></td>
+                                            <td class="text-end" id="totalProdutos"><strong>@(Model.Itens?.Sum(i => i.ValorTotal) ?? 0).ToString("C")</strong></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Aba Pagamentos -->
+                        <div class="tab-pane fade" id="pagamentos" role="tabpanel" aria-labelledby="pagamentos-tab">
+                            <!-- Formulário para adicionar novo pagamento -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 text-primary"><i class="bi bi-plus-circle"></i> Adicionar Pagamento</h6>
+                    </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Tipo de Pagamento</label>
+                                            <select class="form-select form-select-sm" id="novoTipoPagamento">
+                                                <option value="">Selecione...</option>
+                                                @if (ViewBag.FormasPagamento != null)
+                                                {
+                                                    @foreach (var formaPagamento in ViewBag.FormasPagamento)
+                                                    {
+                                                        <option value="@formaPagamento.Value">@formaPagamento.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Valor Pago</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">R$</span>
+                                                <input type="text" class="form-control" id="novoValorPago" placeholder="0,00" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">&nbsp;</label>
+                                            <button type="button" class="btn btn-success btn-sm w-100" id="btnAdicionarPagamento">
+                                                <i class="bi bi-plus"></i> Adicionar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabela de pagamentos -->
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabelaPagamentos">
+                                    <thead>
+                                        <tr>
+                                            <th>Tipo de Pagamento</th>
+                                            <th class="text-end">Valor Pago</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyPagamentos">
+                                        @{
+                                            int pagamentoIndex = 0;
+                                        }
+                                        @if (Model.Pagamentos != null && Model.Pagamentos.Any())
+                                        {
+                                            @foreach (var pagamento in Model.Pagamentos)
+                                            {
+                                                <tr data-pagamento-id="@pagamento.IdPagamento">
+                                                    <td>
+                                                        @{
+                                                            var tipoDescricao = pagamento.TipoPagamento switch
+                                                            {
+                                                                "01" => "01 - Dinheiro",
+                                                                "02" => "02 - Cheque",
+                                                                "03" => "03 - Cartão de Crédito",
+                                                                "04" => "04 - Cartão de Débito",
+                                                                "05" => "05 - Crédito Loja",
+                                                                "10" => "10 - Vale Alimentação",
+                                                                "11" => "11 - Vale Refeição",
+                                                                "12" => "12 - Vale Presente",
+                                                                "13" => "13 - Vale Combustível",
+                                                                "14" => "14 - Duplicata Mercantil",
+                                                                "15" => "15 - Boleto Bancário",
+                                                                "90" => "90 - Sem Pagamento",
+                                                                "99" => "99 - Outros",
+                                                                _ => pagamento.TipoPagamento
+                                                            };
+                                                        }
+                                                        @tipoDescricao
+                                                    </td>
+                                                    <td class="text-end"><strong>@pagamento.ValorPago.ToString("C")</strong></td>
+                                                    <td class="text-center">
+                                                        <input type="hidden" name="Pagamentos[@pagamentoIndex].IdPagamento" value="@pagamento.IdPagamento" />
+                                                        <input type="hidden" name="Pagamentos[@pagamentoIndex].TipoPagamento" value="@pagamento.TipoPagamento" />
+                                                        <input type="hidden" name="Pagamentos[@pagamentoIndex].ValorPago" value="@pagamento.ValorPago" />
+                                                        <button type="button" class="btn btn-danger btn-sm btn-remover-pagamento" data-pagamento-id="@pagamento.IdPagamento">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                pagamentoIndex++;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr id="mensagemSemPagamentos">
+                                                <td colspan="3" class="text-center py-4">
+                                                    <div class="alert alert-info mb-0">
+                                                        <i class="bi bi-info-circle"></i> Nenhum pagamento cadastrado. Use o formulário acima para adicionar pagamentos.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td class="text-end"><strong>Total:</strong></td>
+                                            <td class="text-end" id="totalPagamentos"><strong>@(Model.Pagamentos?.Sum(p => p.ValorPago) ?? 0).ToString("C")</strong></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Garantir que as abas do Bootstrap funcionem corretamente
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página carregada. Verificando abas...');
+            const produtosTab = document.getElementById('produtos-tab');
+            const produtosPane = document.getElementById('produtos');
+            
+            if (produtosTab && produtosPane) {
+                console.log('Aba de produtos encontrada');
+                produtosTab.addEventListener('shown.bs.tab', function() {
+                    console.log('Aba de produtos ativada');
+                });
+            } else {
+                console.error('Aba de produtos não encontrada!');
+            }
+        });
+
+        let itemIndex = @(Model.Itens?.Count() ?? 0);
+        let itemIdCounter = 0;
+
+        // Função auxiliar para converter string numérica (suporta vírgula ou ponto)
+        function parseNumber(value) {
+            if (!value && value !== 0) return 0;
+            let str = String(value).trim();
+            
+            // Se está vazio, retorna 0
+            if (str === '' || str === null || str === undefined) return 0;
+            
+            // Se não tem vírgula nem ponto, tenta parse direto
+            if (str.indexOf(',') === -1 && str.indexOf('.') === -1) {
+                return parseFloat(str) || 0;
+            }
+            
+            // Se tem vírgula, assume formato brasileiro (vírgula como decimal, ponto como milhar)
+            if (str.indexOf(',') !== -1) {
+                // Remove pontos (separadores de milhar) e substitui vírgula por ponto
+                str = str.replace(/\./g, '').replace(',', '.');
+                return parseFloat(str) || 0;
+            }
+            
+            // Se tem apenas ponto, assume formato americano (ponto como decimal)
+            return parseFloat(str) || 0;
+        }
+
+        document.getElementById('btnAdicionarProduto')?.addEventListener('click', function() {
+            const codProduto = document.getElementById('novoCodProduto').value.trim();
+            const descricao = document.getElementById('novaDescricao').value.trim();
+            const ncm = document.getElementById('novoNcm').value.trim();
+            const cfop = document.getElementById('novoCfop').value.trim();
+            const unidade = document.getElementById('novaUnidade').value.trim();
+            // Ler valores diretamente como números do input type="number"
+            const quantidade = parseFloat(document.getElementById('novaQuantidade').value) || 0;
+            const valorUnitario = parseFloat(document.getElementById('novoValorUnitario').value) || 0;
+            const valorTotal = quantidade * valorUnitario;
+            
+            console.log(`Adicionar produto: Qtd=${quantidade}, VUnit=${valorUnitario}, ValorTotal=${valorTotal}`);
+
+            if (!codProduto || !descricao || !ncm || !cfop || !unidade || quantidade <= 0 || valorUnitario <= 0) {
+                alert('Por favor, preencha todos os campos obrigatórios do produto.');
+                return;
+            }
+
+            const tbody = document.getElementById('tbodyProdutos');
+            const tempId = 'new_' + (itemIdCounter++);
+
+            // Linha do produto
+            const trProduto = document.createElement('tr');
+            trProduto.setAttribute('data-item-id', tempId);
+            trProduto.innerHTML = `
+                <td>${codProduto}</td>
+                <td>${descricao}</td>
+                <td>${ncm}</td>
+                <td>${cfop}</td>
+                <td>${unidade}</td>
+                <td class="text-end">${quantidade.toFixed(0)}</td>
+                <td class="text-end">
+                    <input type="number" class="form-control form-control-sm text-end valor-unitario-input" 
+                           name="NovosItens[${itemIndex}].ValorUnitario" 
+                           value="${valorUnitario.toFixed(2).replace(',', '.')}" 
+                           step="0.0001" 
+                           data-item-index="${itemIndex}" 
+                           style="min-width: 100px;" />
+                </td>
+                <td class="text-end">
+                    <input type="number" class="form-control form-control-sm text-end valor-total-input" 
+                           name="NovosItens[${itemIndex}].ValorTotal" 
+                           value="${valorTotal.toFixed(2)}" 
+                           step="0.01" 
+                           data-item-index="${itemIndex}" 
+                           style="min-width: 120px;" />
+                </td>
+                <td class="text-center">
+                    <input type="hidden" name="NovosItens[${itemIndex}].IdNfe" value="@Model.IdNfe" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].CodProduto" value="${codProduto}" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].Descricao" value="${descricao}" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].Ncm" value="${ncm}" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].Cfop" value="${cfop}" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].Unidade" value="${unidade}" />
+                    <input type="hidden" name="NovosItens[${itemIndex}].Quantidade" value="${quantidade}" />
+                    <button type="button" class="btn btn-danger btn-sm btn-remover-item" data-item-id="${tempId}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            // Linha dos impostos
+            const trImposto = document.createElement('tr');
+            trImposto.className = 'table-light';
+            trImposto.setAttribute('data-item-id', tempId);
+            trImposto.innerHTML = `
+                <td colspan="9" class="p-0">
+                    <div class="p-3">
+                        <h6 class="mb-3 text-primary"><i class="bi bi-receipt-cutoff"></i> Impostos do Item</h6>
+                        <input type="hidden" name="NovosItens[${itemIndex}].Imposto.IdItem" value="${tempId}" />
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label small">Origem</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.Origem" value="0" min="0" max="255" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">CST/CSOSN</label>
+                                <input type="text" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.CstCsosn" value="" maxlength="3" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Base ICMS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.BaseIcms" value="0" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Alíquota ICMS (%)</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.AliquotaIcms" value="0" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Valor ICMS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.ValorIcms" value="0" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Base PIS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.BasePis" value="" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Valor PIS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.ValorPis" value="" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Base COFINS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.BaseCofins" value="" step="0.01" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">Valor COFINS</label>
+                                <input type="number" class="form-control form-control-sm" name="NovosItens[${itemIndex}].Imposto.ValorCofins" value="" step="0.01" />
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+
+            // Remover mensagem de "sem produtos" se existir
+            const mensagemSemProdutos = document.getElementById('mensagemSemProdutos');
+            if (mensagemSemProdutos) {
+                mensagemSemProdutos.remove();
+            }
+
+            tbody.appendChild(trProduto);
+            tbody.appendChild(trImposto);
+
+
+            // Limpar formulário
+            document.getElementById('novoCodProduto').value = '';
+            document.getElementById('novaDescricao').value = '';
+            document.getElementById('novoNcm').value = '';
+            document.getElementById('novoCfop').value = '';
+            document.getElementById('novaUnidade').value = '';
+            document.getElementById('novaQuantidade').value = '';
+            document.getElementById('novoValorUnitario').value = '';
+
+            // Atualizar totais
+            atualizarCamposTotais();
+            itemIndex++;
+        });
+
+        // Remover item
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-remover-item')) {
+                const btn = e.target.closest('.btn-remover-item');
+                const itemId = btn.getAttribute('data-item-id');
+                
+                // Se for um item existente (não começa com 'new_'), marcar para remoção
+                if (!itemId.startsWith('new_')) {
+                    const itemIdField = document.querySelector(`input.item-id-field[value="${itemId}"]`);
+                    if (itemIdField) {
+                        // Criar campo hidden para marcar item como removido
+                        const form = document.getElementById('nfeForm');
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'ItensRemovidos';
+                        hiddenInput.value = itemId;
+                        form.appendChild(hiddenInput);
+                    }
+                }
+                
+                // Remover as linhas da tabela
+                const rows = document.querySelectorAll(`tr[data-item-id="${itemId}"]`);
+                rows.forEach(row => row.remove());
+                
+                // Se não houver mais produtos, mostrar mensagem
+                const tbody = document.getElementById('tbodyProdutos');
+                const produtosRestantes = tbody.querySelectorAll('tr:not(.table-light)');
+                if (produtosRestantes.length === 0) {
+                    const trMensagem = document.createElement('tr');
+                    trMensagem.id = 'mensagemSemProdutos';
+                    trMensagem.innerHTML = `
+                        <td colspan="9" class="text-center py-4">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> Nenhum produto cadastrado. Use o formulário acima para adicionar produtos.
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(trMensagem);
+                }
+                
+                // Atualizar campos totais após remover produto
+                atualizarCamposTotais();
+            }
+        });
+
+        // Função para atualizar os campos ValorProdutos e ValorTotalNfe visualmente
+        // (os valores finais serão calculados no servidor)
+        function atualizarCamposTotais() {
+            const rows = document.querySelectorAll('#tbodyProdutos tr:not(.table-light)');
+            let totalProdutos = 0;
+            let totalImpostos = 0;
+            
+            // Calcular total dos produtos
+            rows.forEach(row => {
+                const valorTotalInput = row.querySelector('.valor-total-input');
+                if (valorTotalInput) {
+                    const valor = parseFloat(valorTotalInput.value) || 0;
+                    totalProdutos += valor;
+                }
+                
+                // Calcular impostos da linha de impostos seguinte
+                const trImposto = row.nextElementSibling;
+                if (trImposto && trImposto.classList.contains('table-light')) {
+                    const valorIcmsInput = trImposto.querySelector('input[name*=".Imposto.ValorIcms"]');
+                    const valorPisInput = trImposto.querySelector('input[name*=".Imposto.ValorPis"]');
+                    const valorCofinsInput = trImposto.querySelector('input[name*=".Imposto.ValorCofins"]');
+                    
+                    const valorIcms = parseFloat(valorIcmsInput?.value || 0) || 0;
+                    const valorPis = parseFloat(valorPisInput?.value || 0) || 0;
+                    const valorCofins = parseFloat(valorCofinsInput?.value || 0) || 0;
+                    
+                    totalImpostos += valorIcms + valorPis + valorCofins;
+                }
+            });
+            
+            // Atualizar campos visualmente (apenas para preview)
+            const valorProdutosInput = document.getElementById('valorProdutos');
+            const valorProdutosHidden = document.getElementById('valorProdutosHidden');
+            const valorTotalNfeInput = document.getElementById('valorTotalNfe');
+            const valorTotalNfeHidden = document.getElementById('valorTotalNfeHidden');
+            
+            if (valorProdutosInput && valorProdutosHidden) {
+                // Salvar valor com ponto como separador decimal para o servidor
+                const valorParaServidor = totalProdutos.toFixed(2);
+                valorProdutosHidden.value = valorParaServidor;
+                
+                // Formatar valor com separador de milhar e 2 casas decimais para exibição
+                const valorFormatado = totalProdutos.toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                });
+                valorProdutosInput.value = valorFormatado;
+            }
+            
+            if (valorTotalNfeInput && valorTotalNfeHidden) {
+                const valorTotal = totalProdutos + totalImpostos;
+                
+                // Salvar valor com ponto como separador decimal para o servidor
+                const valorParaServidor = valorTotal.toFixed(2);
+                valorTotalNfeHidden.value = valorParaServidor;
+                
+                // Formatar valor com separador de milhar e 2 casas decimais para exibição
+                const valorFormatado = valorTotal.toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                });
+                valorTotalNfeInput.value = valorFormatado;
+            }
+            
+            // Atualizar também a exibição do total de produtos
+            const totalProdutosElement = document.getElementById('totalProdutos');
+            if (totalProdutosElement) {
+                // Formatar como moeda brasileira: R$ 300,00
+                const valorFormatado = totalProdutos.toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                });
+                totalProdutosElement.innerHTML = `<strong>R$ ${valorFormatado}</strong>`;
+            }
+        }
+
+        // Adicionar event listeners para campos de impostos existentes
+        document.addEventListener('DOMContentLoaded', function() {
+            const impostosInputs = document.querySelectorAll('#tbodyProdutos input[name*=".Imposto."]');
+            impostosInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                });
+            });
+        });
+
+        // Event listeners para campos editáveis de valor unitário, valor total e quantidade
+        document.addEventListener('input', function(e) {
+            // Quando o valor unitário é alterado, recalcular valor total
+            if (e.target.classList.contains('valor-unitario-input')) {
+                const input = e.target;
+                const itemIndex = parseInt(input.getAttribute('data-item-index'));
+                const row = input.closest('tr');
+                const quantidadeInput = row.querySelector('input[name*=".Quantidade"]');
+                const valorTotalInput = row.querySelector('.valor-total-input');
+                
+                if (quantidadeInput && valorTotalInput) {
+                    // Ler valores diretamente como números do input type="number"
+                    const quantidade = parseFloat(quantidadeInput.value) || 0;
+                    const valorUnitario = parseFloat(input.value) || 0;
+                    const valorTotal = quantidade * valorUnitario;
+                    
+                    console.log(`Editar valor unitário: Qtd=${quantidade}, VUnit=${valorUnitario}, ValorTotal=${valorTotal}`);
+                    
+                    // Garantir que o valor seja salvo com ponto como separador decimal
+                    valorTotalInput.value = valorTotal.toFixed(2);
+                    atualizarCamposTotais();
+                }
+            }
+            
+            // Quando a quantidade é alterada, recalcular valor total
+            if (e.target.name && e.target.name.includes('.Quantidade')) {
+                const input = e.target;
+                const row = input.closest('tr');
+                const quantidadeInput = input;
+                const valorUnitarioInput = row.querySelector('.valor-unitario-input');
+                const valorTotalInput = row.querySelector('.valor-total-input');
+                
+                if (quantidadeInput && valorUnitarioInput && valorTotalInput) {
+                    // Ler valores diretamente como números do input type="number"
+                    const quantidade = parseFloat(quantidadeInput.value) || 0;
+                    const valorUnitario = parseFloat(valorUnitarioInput.value) || 0;
+                    const valorTotal = quantidade * valorUnitario;
+                    
+                    console.log(`Editar quantidade: Qtd=${quantidade}, VUnit=${valorUnitario}, ValorTotal=${valorTotal}`);
+                    
+                    // Garantir que o valor seja salvo com ponto como separador decimal
+                    valorTotalInput.value = valorTotal.toFixed(2);
+                    atualizarCamposTotais();
+                }
+            }
+            
+            // Quando o valor total é alterado, recalcular valor unitário
+            if (e.target.classList.contains('valor-total-input')) {
+                const input = e.target;
+                const itemIndex = parseInt(input.getAttribute('data-item-index'));
+                const row = input.closest('tr');
+                const quantidadeInput = row.querySelector('input[name*=".Quantidade"]');
+                const valorUnitarioInput = row.querySelector('.valor-unitario-input');
+                
+                if (quantidadeInput && valorUnitarioInput) {
+                    // Ler valores diretamente como números do input type="number"
+                    const quantidade = parseFloat(quantidadeInput.value) || 0;
+                    const valorTotal = parseFloat(input.value) || 0;
+                    if (quantidade > 0) {
+                        const valorUnitario = valorTotal / quantidade;
+                        // Garantir que o valor seja salvo com ponto como separador decimal
+                        valorUnitarioInput.value = valorUnitario.toFixed(2).replace(',', '.');
+                    }
+                    atualizarCamposTotais();
+                }
+            }
+            
+            // Quando impostos são alterados, atualizar totais
+            if (e.target.name && e.target.name.includes('.Imposto.')) {
+                atualizarCamposTotais();
+            }
+        });
+        
+        // Atualizar totais ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            atualizarCamposTotais();
+        });
+
+        // Gerenciamento de Pagamentos
+        let pagamentoIndex = @(Model.Pagamentos?.Count() ?? 0);
+
+        document.getElementById('btnAdicionarPagamento')?.addEventListener('click', function() {
+            const tipoPagamento = document.getElementById('novoTipoPagamento').value;
+            // Converter vírgula para ponto para parsing correto
+            const valorPagoStr = document.getElementById('novoValorPago').value.replace(',', '.');
+            const valorPago = parseFloat(valorPagoStr) || 0;
+
+            if (!tipoPagamento || valorPago <= 0) {
+                alert('Por favor, preencha todos os campos do pagamento.');
+                return;
+            }
+
+            const tbody = document.getElementById('tbodyPagamentos');
+            const currentIndex = pagamentoIndex;
+            const tempId = 'new_pag_' + currentIndex;
+
+            // Obter descrição do tipo de pagamento
+            const tipoSelect = document.getElementById('novoTipoPagamento');
+            const tipoDescricao = tipoSelect.options[tipoSelect.selectedIndex].text;
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-pagamento-id', tempId);
+            tr.innerHTML = `
+                <td>${tipoDescricao} (${tipoPagamento})</td>
+                <td class="text-end"><strong>${valorPago.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</strong></td>
+                <td class="text-center">
+                    <input type="hidden" name="NovosPagamentos[${currentIndex}].TipoPagamento" value="${tipoPagamento}" />
+                    <input type="hidden" name="NovosPagamentos[${currentIndex}].ValorPago" value="${valorPago.toFixed(2).replace(',', '.')}" />
+                    <button type="button" class="btn btn-danger btn-sm btn-remover-pagamento" data-pagamento-id="${tempId}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            // Remover mensagem de "sem pagamentos" se existir
+            const mensagemSemPagamentos = document.getElementById('mensagemSemPagamentos');
+            if (mensagemSemPagamentos) {
+                mensagemSemPagamentos.remove();
+            }
+
+            tbody.appendChild(tr);
+
+            // Limpar formulário
+            document.getElementById('novoTipoPagamento').value = '';
+            document.getElementById('novoValorPago').value = '';
+
+            // Atualizar total
+            atualizarTotalPagamentos();
+            
+            // Incrementar índice após adicionar
+            pagamentoIndex++;
+        });
+
+        // Remover pagamento
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-remover-pagamento')) {
+                const btn = e.target.closest('.btn-remover-pagamento');
+                const pagamentoId = btn.getAttribute('data-pagamento-id');
+                
+                // Se for um pagamento existente (não começa com 'new_pag_'), marcar para remoção
+                if (!pagamentoId.startsWith('new_pag_')) {
+                    const form = document.getElementById('nfeForm');
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'PagamentosRemovidos';
+                    hiddenInput.value = pagamentoId;
+                    form.appendChild(hiddenInput);
+                }
+                
+                // Remover a linha da tabela
+                const row = document.querySelector(`tr[data-pagamento-id="${pagamentoId}"]`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Reordenar índices
+                reordenarIndicesPagamentos();
+                
+                // Se não houver mais pagamentos, mostrar mensagem
+                const tbody = document.getElementById('tbodyPagamentos');
+                const pagamentosRestantes = tbody.querySelectorAll('tr[data-pagamento-id]');
+                if (pagamentosRestantes.length === 0) {
+                    const trMensagem = document.createElement('tr');
+                    trMensagem.id = 'mensagemSemPagamentos';
+                    trMensagem.innerHTML = `
+                        <td colspan="3" class="text-center py-4">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> Nenhum pagamento cadastrado. Use o formulário acima para adicionar pagamentos.
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(trMensagem);
+                }
+                
+                atualizarTotalPagamentos();
+            }
+        });
+
+        function reordenarIndicesPagamentos() {
+            const tbody = document.getElementById('tbodyPagamentos');
+            const pagamentos = tbody.querySelectorAll('tr[data-pagamento-id]');
+            let novoIndex = 0;
+            
+            pagamentos.forEach(tr => {
+                const inputs = tr.querySelectorAll('input[type="hidden"]');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    if (name && name.includes('Pagamentos[')) {
+                        const match = name.match(/Pagamentos\[(\d+)\]/);
+                        if (match) {
+                            input.name = name.replace(/Pagamentos\[\d+\]/, `Pagamentos[${novoIndex}]`);
+                        }
+                    }
+                });
+                novoIndex++;
+            });
+        }
+
+        function atualizarTotalPagamentos() {
+            const rows = document.querySelectorAll('#tbodyPagamentos tr[data-pagamento-id]');
+            let total = 0;
+            rows.forEach(row => {
+                const valorPagoInput = row.querySelector('input[name*=".ValorPago"]');
+                if (valorPagoInput) {
+                    total += parseFloat(valorPagoInput.value) || 0;
+                }
+            });
+            document.getElementById('totalPagamentos').innerHTML = `<strong>${total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</strong>`;
+        }
+
+        // Dicionário com CFOP por natureza de operação
+        const naturezasOperacaoComCfop = @Html.Raw(Json.Serialize(ViewBag.NaturezasOperacaoComCfop ?? new Dictionary<string, string>()));
+
+        // Event listener para quando a natureza da operação for selecionada
+        document.addEventListener('DOMContentLoaded', function() {
+            const naturezaOperacaoSelect = document.querySelector('select[name="NaturezaOperacao"]');
+            if (naturezaOperacaoSelect) {
+                naturezaOperacaoSelect.addEventListener('change', function() {
+                    const naturezaSelecionada = this.value;
+                    if (naturezaSelecionada && naturezasOperacaoComCfop[naturezaSelecionada]) {
+                        const cfop = naturezasOperacaoComCfop[naturezaSelecionada];
+                        
+                        // Preencher CFOP em todos os produtos existentes na tabela (itens existentes e novos)
+                        const cfopInputs = document.querySelectorAll('input[name*=".Cfop"]');
+                        cfopInputs.forEach(input => {
+                            input.value = cfop;
+                        });
+                        
+                        // Preencher CFOP no formulário de adicionar novo produto
+                        const novoCfopInput = document.getElementById('novoCfop');
+                        if (novoCfopInput) {
+                            novoCfopInput.value = cfop;
+                        }
+                    }
+                });
+            }
+        });
+
+        // Botão Transmitir NFe
+        document.getElementById('btnTransmitirNFe')?.addEventListener('click', async function() {
+            const btn = this;
+            const idNfe = btn.getAttribute('data-id');
+            
+            if (!idNfe) {
+                alert('ID da NFe não encontrado.');
+                return;
+            }
+
+            // Confirmar transmissão
+            if (!confirm('Deseja realmente transmitir esta NFe para a SEFAZ? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+
+            // Desabilitar botão e mostrar loading
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Transmitindo...';
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                const formData = new FormData();
+                formData.append('__RequestVerificationToken', token);
+                
+                const response = await fetch(`/NFe/TransmitirNFe/${idNfe}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`NFe transmitida com sucesso!\n\nChave de Acesso: ${result.chaveAcesso || 'N/A'}\nStatus: ${result.status || 'N/A'}`);
+                    
+                    // Recarregar a página para atualizar os dados
+                    window.location.reload();
+                } else {
+                    let mensagemErro = result.message || 'Erro ao transmitir NFe.';
+                    
+                    // Se houver motivo de rejeição da autorização, exibir
+                    if (result.motivoStatus) {
+                        mensagemErro = `Rejeição: ${result.motivoStatus}`;
+                        if (result.codigoStatus) {
+                            mensagemErro += `\nCódigo: ${result.codigoStatus}`;
+                        }
+                    }
+                    
+                    // Se houver erros detalhados, adicionar
+                    if (result.erros && result.erros.length > 0) {
+                        const errosDetalhados = result.erros.map(e => `- ${e.mensagem || e.codigo || 'Erro desconhecido'}`).join('\n');
+                        mensagemErro += '\n\nDetalhes:\n' + errosDetalhados;
+                    }
+                    
+                    alert(mensagemErro);
+                }
+            } catch (error) {
+                console.error('Erro ao transmitir NFe:', error);
+                alert('Ocorreu um erro ao transmitir a NFe. Por favor, tente novamente.');
+            } finally {
+                // Reabilitar botão
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+    </script>
+}

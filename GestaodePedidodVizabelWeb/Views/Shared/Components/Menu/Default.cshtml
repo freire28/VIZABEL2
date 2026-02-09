@@ -1,0 +1,58 @@
+@model List<GestaoPedidosVizabel.ViewComponents.MenuItem>
+
+<ul class="sidebar-menu">
+    @foreach (var item in Model)
+    {
+        @if (item.HasSubmenu && item.SubmenuItems != null && item.SubmenuItems.Any())
+        {
+            <li class="menu-item has-submenu">
+                <a class="menu-link" data-bs-toggle="collapse" href="#@(item.Text.Replace(" ", ""))Menu" role="button" aria-expanded="false" aria-controls="@(item.Text.Replace(" ", ""))Menu">
+                    <i class="bi @item.Icon"></i>
+                    <span>@item.Text</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
+                </a>
+                <div class="collapse submenu" id="@(item.Text.Replace(" ", ""))Menu">
+                    <ul class="submenu-list">
+                        @foreach (var subItem in item.SubmenuItems)
+                        {
+                            <li>
+                                <a class="submenu-link" asp-controller="@subItem.Controller" asp-action="@subItem.Action">
+                                    <i class="bi @subItem.Icon"></i>
+                                    <span>@subItem.Text</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </li>
+        }
+        else if (item.HasPermission)
+        {
+            <li class="menu-item">
+                <a class="menu-link" asp-controller="@item.Controller" asp-action="@item.Action">
+                    <i class="bi @item.Icon"></i>
+                    <span>@item.Text</span>
+                </a>
+            </li>
+        }
+    }
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,346 @@
+@model GestaoPedidosVizabel.Models.Produto
+@using GestaoPedidosVizabel.Models
+
+@{
+    ViewData["Title"] = "Detalhes do Produto";
+    var etapasDisponiveis = ViewBag.EtapasDisponiveis as List<EtapaProducao> ?? new List<EtapaProducao>();
+    var gradesDisponiveis = ViewBag.GradesDisponiveis as List<Grade> ?? new List<Grade>();
+    var etapasDoProduto = Model.ProdutoEtapasProducao?.Select(pep => pep.IdEtapa).ToList() ?? new List<int?>();
+    var gradesDoProduto = Model.ProdutoGrades?.Select(pg => pg.IdGrade).ToList() ?? new List<int>();
+    var etapasParaAdicionar = etapasDisponiveis.Where(e => !etapasDoProduto.Contains(e.IdEtapa)).ToList();
+    var gradesParaAdicionar = gradesDisponiveis.Where(g => !gradesDoProduto.Contains(g.IdGrade)).ToList();
+    
+    var csosnDescricoes = new Dictionary<string, string>
+    {
+        { "101", "101: Tributada com permissão de crédito do ICMS" },
+        { "102", "102: Tributada sem permissão de crédito" },
+        { "103", "103: Isenção de ICMS" },
+        { "300", "300: Imune" },
+        { "400", "400: Não tributada" },
+        { "500", "500: ICMS cobrado por substituição tributária" },
+        { "900", "900: Outros" }
+    };
+    var csosnDescricao = !string.IsNullOrEmpty(Model.Csosn) && csosnDescricoes.ContainsKey(Model.Csosn) 
+        ? csosnDescricoes[Model.Csosn] 
+        : Model.Csosn;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Detalhes do Produto</h5>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.IdProduto" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Descricao)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Descricao)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.PrazoEntrega)</dt>
+            <dd class="col-sm-9">@(Model.PrazoEntrega.HasValue ? $"{Model.PrazoEntrega} dias" : "-")</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.FabricacaoTerceirizada)</dt>
+            <dd class="col-sm-9">
+                @if (Model.FabricacaoTerceirizada)
+                {
+                    <span class="badge bg-info">Sim</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Não</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ncmsh)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Ncmsh)</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Csosn)</dt>
+            <dd class="col-sm-9">@csosnDescricao</dd>
+
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Ativo)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Ativo == true)
+                {
+                    <span class="badge bg-success">Ativo</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Inativo</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<!-- Seção Etapas de Produção -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-diagram-3"></i> Etapas de Produção
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="AdicionarEtapa" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                <div class="col-md-6">
+                    <label class="form-label">Adicionar Etapa</label>
+                    <select name="idEtapa" class="form-select" required>
+                        <option value="">Selecione uma etapa...</option>
+                        @foreach (var etapa in etapasParaAdicionar)
+                        {
+                            <option value="@etapa.IdEtapa">@etapa.Descricao</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sequência <small class="text-muted">(opcional)</small></label>
+                    <input type="number" name="sequencia" class="form-control" min="1" placeholder="Auto" title="Deixe em branco para calcular automaticamente" />
+                    <small class="text-muted">Será calculada automaticamente se não informada</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100" @(etapasParaAdicionar.Any() ? "" : "disabled")>
+                        <i class="bi bi-plus-circle"></i> Adicionar
+                    </button>
+                </div>
+            </form>
+            @if (!etapasParaAdicionar.Any() && etapasDisponiveis.Any())
+            {
+                <small class="text-muted">Todas as etapas disponíveis já foram adicionadas a este produto.</small>
+            }
+            else if (!etapasDisponiveis.Any())
+            {
+                <small class="text-muted">Não há etapas ativas disponíveis no sistema.</small>
+            }
+        </div>
+
+        @if (Model.ProdutoEtapasProducao != null && Model.ProdutoEtapasProducao.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Etapa</th>
+                            <th>Sequência</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var produtoEtapa in Model.ProdutoEtapasProducao.OrderBy(pep => pep.Sequencia ?? 999).ThenBy(pep => pep.EtapaProducao?.Descricao))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@produtoEtapa.EtapaProducao?.Descricao</strong>
+                                </td>
+                                <td>
+                                    @{
+                                        var etapasOrdenadas = Model.ProdutoEtapasProducao
+                                            .Where(pep => pep.Sequencia.HasValue)
+                                            .OrderBy(pep => pep.Sequencia.Value)
+                                            .ToList();
+                                        var indiceAtual = etapasOrdenadas.FindIndex(e => e.IdProdutoEtapa == produtoEtapa.IdProdutoEtapa);
+                                        var isPrimeira = indiceAtual <= 0;
+                                        var isUltima = indiceAtual >= etapasOrdenadas.Count - 1;
+                                    }
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-primary" style="font-size: 0.9rem; min-width: 40px; padding: 6px 10px;">
+                                            @(produtoEtapa.Sequencia?.ToString() ?? "-")
+                                        </span>
+                                        <div class="d-flex flex-column">
+                                            <form asp-action="DiminuirSequenciaEtapa" method="post" class="d-inline" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                                <input type="hidden" name="idProdutoEtapa" value="@produtoEtapa.IdProdutoEtapa" />
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" 
+                                                        title="Mover para cima" 
+                                                        @(isPrimeira ? "disabled" : "") 
+                                                        style="padding: 2px 6px; line-height: 1;">
+                                                    <i class="bi bi-arrow-up"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="AumentarSequenciaEtapa" method="post" class="d-inline" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                                <input type="hidden" name="idProdutoEtapa" value="@produtoEtapa.IdProdutoEtapa" />
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" 
+                                                        title="Mover para baixo" 
+                                                        @(isUltima ? "disabled" : "") 
+                                                        style="padding: 2px 6px; line-height: 1;">
+                                                    <i class="bi bi-arrow-down"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (produtoEtapa.Ativo)
+                                    {
+                                        <span class="badge bg-success">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="ToggleEtapaAtivo" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                        <input type="hidden" name="idProdutoEtapa" value="@produtoEtapa.IdProdutoEtapa" />
+                                        <button type="submit" class="btn btn-sm @(produtoEtapa.Ativo ? "btn-warning" : "btn-success")" 
+                                                title="@(produtoEtapa.Ativo ? "Desativar" : "Ativar")">
+                                            <i class="bi bi-@(produtoEtapa.Ativo ? "x-circle" : "check-circle")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="RemoverEtapa" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                        <input type="hidden" name="idProdutoEtapa" value="@produtoEtapa.IdProdutoEtapa" />
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('Deseja realmente remover esta etapa do produto?');">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhuma etapa de produção adicionada a este produto ainda.
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Seção Grades -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-grid"></i> Grades: Tamanho
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="AdicionarGrade" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                <div class="col-md-8">
+                    <label class="form-label">Adicionar Grade</label>
+                    <select name="idGrade" class="form-select" required>
+                        <option value="">Selecione uma grade...</option>
+                        @foreach (var grade in gradesParaAdicionar)
+                        {
+                            <option value="@grade.IdGrade">@grade.Descricao</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100" @(gradesParaAdicionar.Any() ? "" : "disabled")>
+                        <i class="bi bi-plus-circle"></i> Adicionar Grade
+                    </button>
+                </div>
+            </form>
+            @if (!gradesParaAdicionar.Any() && gradesDisponiveis.Any())
+            {
+                <small class="text-muted">Todas as grades disponíveis já foram adicionadas a este produto.</small>
+            }
+            else if (!gradesDisponiveis.Any())
+            {
+                <small class="text-muted">Não há grades ativas disponíveis no sistema.</small>
+            }
+        </div>
+
+        @if (Model.ProdutoGrades != null && Model.ProdutoGrades.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Grade</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var produtoGrade in Model.ProdutoGrades.OrderBy(pg => pg.Grade?.Descricao))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@produtoGrade.Grade?.Descricao</strong>
+                                </td>
+                                <td>
+                                    @if (produtoGrade.Ativo)
+                                    {
+                                        <span class="badge bg-success">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="ToggleGradeAtivo" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                        <input type="hidden" name="idProdutoGrade" value="@produtoGrade.IdProdutoGrade" />
+                                        <button type="submit" class="btn btn-sm @(produtoGrade.Ativo ? "btn-warning" : "btn-success")" 
+                                                title="@(produtoGrade.Ativo ? "Desativar" : "Ativar")">
+                                            <i class="bi bi-@(produtoGrade.Ativo ? "x-circle" : "check-circle")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="RemoverGrade" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idProduto" value="@Model.IdProduto" />
+                                        <input type="hidden" name="idProdutoGrade" value="@produtoGrade.IdProdutoGrade" />
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('Deseja realmente remover esta grade do produto?');">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhuma grade adicionada a este produto ainda.
+            </div>
+        }
+    </div>
+</div>
+

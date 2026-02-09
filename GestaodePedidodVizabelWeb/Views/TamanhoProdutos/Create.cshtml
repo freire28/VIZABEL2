@@ -1,0 +1,78 @@
+@model GestaoPedidosVizabel.Models.TamanhoProduto
+
+@{
+    ViewData["Title"] = "Novo Tamanho de Produto";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Cadastrar Novo Tamanho de Produto</h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" form="tamanhoProdutoForm" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" id="tamanhoProdutoForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Tamanho" class="form-label"></label>
+                    <input asp-for="Tamanho" class="form-control" placeholder="Ex: P, M, G, GG, etc." />
+                    <span asp-validation-for="Tamanho" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="hidden" name="Ativo" value="false" />
+                        <input type="checkbox" name="Ativo" value="true" class="form-check-input" id="Ativo" checked />
+                        <label class="form-check-label" for="Ativo">@Html.DisplayNameFor(m => m.Ativo)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

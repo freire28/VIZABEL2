@@ -1,0 +1,339 @@
+@model GestaoPedidosVizabel.Models.Cliente
+
+@{
+    ViewData["Title"] = "Novo Cliente";
+}
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Cadastrar Novo Cliente</h5>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" form="clienteForm" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" id="clienteForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="row">
+
+                <div class="col-md-3 mb-3">
+                    <label asp-for="CodCliente" class="form-label"></label>
+                    <input asp-for="CodCliente" class="form-control" type="number" readonly />
+                    <span asp-validation-for="CodCliente" class="text-danger"></span>
+                </div>            
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="TipoPessoa" class="form-label"></label>
+                    <select asp-for="TipoPessoa" class="form-select" id="tipoPessoa">
+                        <option value="false">Pessoa Física</option>
+                        <option value="true">Pessoa Jurídica</option>
+                    </select>
+                    <span asp-validation-for="TipoPessoa" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Cpfcnpj" class="form-label"></label>
+                    <input asp-for="Cpfcnpj" class="form-control" id="cpfcnpjInput" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+                        <button type="button" class="btn btn-outline-primary" id="btnBuscarCNPJ" title="Buscar dados da Receita">
+                            <i class="bi bi-search"></i> Dados Receita
+                        </button>
+                    <span asp-validation-for="Cpfcnpj" class="text-danger"></span>
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nomerazao" class="form-label"></label>
+                    <input asp-for="Nomerazao" class="form-control" />
+                    <span asp-validation-for="Nomerazao" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Fantasia" class="form-label"></label>
+                    <input asp-for="Fantasia" class="form-control" />
+                    <span asp-validation-for="Fantasia" class="text-danger"></span>
+                </div>
+               
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="RgIe" class="form-label"></label>
+                    <input asp-for="RgIe" class="form-control" />
+                    <span asp-validation-for="RgIe" class="text-danger"></span>
+                </div>
+               
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Fone" class="form-label"></label>
+                    <input asp-for="Fone" class="form-control" placeholder="(00) 00000-0000" />
+                    <span asp-validation-for="Fone" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Whatsapp" class="form-label"></label>
+                    <input asp-for="Whatsapp" class="form-control" placeholder="(00) 00000-0000" />
+                    <span asp-validation-for="Whatsapp" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Contato" class="form-label"></label>
+                    <input asp-for="Contato" class="form-control" />
+                    <span asp-validation-for="Contato" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FoneContato" class="form-label"></label>
+                    <input asp-for="FoneContato" class="form-control" placeholder="(00) 00000-0000" />
+                    <span asp-validation-for="FoneContato" class="text-danger"></span>
+                </div>
+            </div>
+
+            <hr />
+            <h6>Endereço</h6>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label asp-for="EnderecoCep" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="EnderecoCep" class="form-control" placeholder="00000-000" id="enderecoCep" />
+                        <button type="button" class="btn btn-outline-primary" id="btnBuscarCep" title="Buscar dados do CEP">
+                            <i class="bi bi-search"></i> Dados Correios
+                        </button>
+                    </div>
+                    <span asp-validation-for="EnderecoCep" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="EnderecoLogradouro" class="form-label"></label>
+                    <input asp-for="EnderecoLogradouro" class="form-control" />
+                    <span asp-validation-for="EnderecoLogradouro" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoNumero" class="form-label"></label>
+                    <input asp-for="EnderecoNumero" class="form-control" />
+                    <span asp-validation-for="EnderecoNumero" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoComplemento" class="form-label"></label>
+                    <input asp-for="EnderecoComplemento" class="form-control" />
+                    <span asp-validation-for="EnderecoComplemento" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoBairro" class="form-label"></label>
+                    <input asp-for="EnderecoBairro" class="form-control" />
+                    <span asp-validation-for="EnderecoBairro" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoCidade" class="form-label"></label>
+                    <input asp-for="EnderecoCidade" class="form-control" />
+                    <span asp-validation-for="EnderecoCidade" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoUf" class="form-label"></label>
+                    <input asp-for="EnderecoUf" class="form-control" maxlength="2" placeholder="UF" />
+                    <span asp-validation-for="EnderecoUf" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EnderecoIbge" class="form-label"></label>
+                    <input asp-for="EnderecoIbge" class="form-control" maxlength="10" placeholder="Código IBGE" />
+                    <span asp-validation-for="EnderecoIbge" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <div class="form-check">
+                        <input asp-for="Ativo" class="form-check-input" type="checkbox" checked />
+                        <label asp-for="Ativo" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 pt-3 border-top">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Alternar máscara entre CPF e CNPJ
+            $('#tipoPessoa').change(function() {
+                var isJuridica = $(this).val() === 'true';
+                var placeholder = isJuridica ? '00.000.000/0000-00' : '000.000.000-00';
+                $('#cpfcnpjInput').attr('placeholder', placeholder);
+            });
+
+            // Máscara CPF/CNPJ
+            $('#cpfcnpjInput').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                var isJuridica = $('#tipoPessoa').val() === 'true';
+                
+                if (isJuridica) {
+                    // CNPJ
+                    if (value.length <= 14) {
+                        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                        $(this).val(value);
+                    }
+                } else {
+                    // CPF
+                    if (value.length <= 11) {
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                        $(this).val(value);
+                    }
+                }
+            });
+
+            // Máscara Telefone
+            $('input[name="Fone"], input[name="Whatsapp"], input[name="FoneContato"]').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length <= 11) {
+                    if (value.length <= 10) {
+                        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                    } else {
+                        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                    }
+                    $(this).val(value);
+                }
+            });
+
+            // Máscara CEP
+            $('input[name="EnderecoCep"]').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length <= 8) {
+                    value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                    $(this).val(value);
+                }
+            });
+
+            // Buscar CEP na API Nuvem Fiscal
+            $('#btnBuscarCep').on('click', function() {
+                var cep = $('#enderecoCep').val();
+                
+                if (!cep || cep.trim() === '') {
+                    alert('Por favor, informe o CEP.');
+                    return;
+                }
+
+                // Remover caracteres não numéricos para validação
+                var cepLimpo = cep.replace(/\D/g, '');
+                
+                if (cepLimpo.length !== 8) {
+                    alert('CEP inválido. Deve conter 8 dígitos.');
+                    return;
+                }
+
+                // Desabilitar botão durante a busca
+                var $btn = $(this);
+                var originalHtml = $btn.html();
+                $btn.prop('disabled', true);
+                $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Buscando...');
+
+                $.ajax({
+                    url: '@Url.Action("BuscarCep", "Clientes")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(cep),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            // Preencher campos do endereço
+                            if (response.data.logradouro) {
+                                $('input[name="EnderecoLogradouro"]').val(response.data.logradouro);
+                            }
+                            if (response.data.complemento) {
+                                $('input[name="EnderecoComplemento"]').val(response.data.complemento);
+                            }
+                            if (response.data.bairro) {
+                                $('input[name="EnderecoBairro"]').val(response.data.bairro);
+                            }
+                            if (response.data.cidade) {
+                                $('input[name="EnderecoCidade"]').val(response.data.cidade);
+                            }
+                            if (response.data.uf) {
+                                $('input[name="EnderecoUf"]').val(response.data.uf.toUpperCase());
+                            }
+                            if (response.data.ibge) {
+                                $('input[name="EnderecoIbge"]').val(response.data.ibge);
+                            }
+                            
+                            // Atualizar CEP formatado se retornado
+                            if (response.data.cep) {
+                                $('#enderecoCep').val(response.data.cep);
+                            }
+
+                            alert('Dados do CEP preenchidos com sucesso!');
+                        } else {
+                            alert(response.message || 'CEP não encontrado.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = 'Erro ao buscar CEP.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        alert(errorMessage);
+                    },
+                    complete: function() {
+                        // Reabilitar botão
+                        $btn.prop('disabled', false);
+                        $btn.html(originalHtml);
+                    }
+                });
+            });
+        });
+    </script>
+}

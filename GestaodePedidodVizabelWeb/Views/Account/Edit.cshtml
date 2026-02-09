@@ -1,0 +1,77 @@
+@model GestaoPedidosVizabel.Models.Usuario
+
+@{
+    ViewData["Title"] = "Editar Usuário";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Editar Usuário</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="IdUsuario" />
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Login" class="form-label"></label>
+                    <input asp-for="Login" class="form-control" required />
+                    <span asp-validation-for="Login" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="novaSenha" class="form-label">Nova Senha (deixe em branco para manter a atual)</label>
+                    <input type="password" name="novaSenha" id="novaSenha" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Nome" class="form-label"></label>
+                    <input asp-for="Nome" class="form-control" required />
+                    <span asp-validation-for="Nome" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" type="email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input asp-for="Administrador" class="form-check-input" type="checkbox" value="true" />
+                        <input type="hidden" name="Administrador" value="false" />
+                        <label asp-for="Administrador" class="form-check-label">
+                            @Html.DisplayNameFor(model => model.Administrador)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input asp-for="Ativo" class="form-check-input" type="checkbox" value="true" />
+                        <input type="hidden" name="Ativo" value="false" />
+                        <label asp-for="Ativo" class="form-check-label">
+                            @Html.DisplayNameFor(model => model.Ativo)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Salvar
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

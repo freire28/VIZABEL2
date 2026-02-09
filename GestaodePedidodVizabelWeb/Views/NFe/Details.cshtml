@@ -1,0 +1,312 @@
+@model GestaoPedidosVizabel.Models.NFe
+
+@{
+    ViewData["Title"] = "Detalhes da NF-e";
+}
+
+<div class="row">
+    <!-- Card: Dados da NF-e -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-receipt"></i> Dados da NF-e
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.IdNfe)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.IdNfe)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.IdEmpresa)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.IdEmpresa)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Modelo)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.Modelo)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Serie)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.Serie)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Numero)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.Numero)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.NaturezaOperacao)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.NaturezaOperacao)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.DataEmissao)</dt>
+                    <dd class="col-sm-7">@Model.DataEmissao.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.TipoNfe)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.TipoNfe)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Finalidade)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.Finalidade)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Ambiente)</dt>
+                    <dd class="col-sm-7">@Html.DisplayFor(model => model.Ambiente)</dd>
+
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Status)</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-info">@Html.DisplayFor(model => model.Status)</span>
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.ChaveAcesso))
+                    {
+                        <dt class="col-sm-5">@Html.DisplayNameFor(model => model.ChaveAcesso)</dt>
+                        <dd class="col-sm-7"><small>@Html.DisplayFor(model => model.ChaveAcesso)</small></dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Valores -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-currency-dollar"></i> Valores
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">@Html.DisplayNameFor(model => model.ValorProdutos)</dt>
+                    <dd class="col-sm-6"><strong>@Model.ValorProdutos.ToString("C")</strong></dd>
+
+                    <dt class="col-sm-6">@Html.DisplayNameFor(model => model.ValorTotalNfe)</dt>
+                    <dd class="col-sm-6">
+                        <strong class="text-success fs-5">@Model.ValorTotalNfe.ToString("C")</strong>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card: Dados do Destinatário -->
+@if (Model.Destinatario != null)
+{
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person"></i> Dados do Destinatário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Informações Pessoais -->
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2 mb-3">Informações Pessoais</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Nome</dt>
+                                <dd class="col-sm-7"><strong>@Model.Destinatario.Nome</strong></dd>
+
+                                <dt class="col-sm-5">CNPJ/CPF</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.CnpjCpf</dd>
+
+                                <dt class="col-sm-5">Indicador IE</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge bg-secondary">@Model.Destinatario.IndIeDest</span> - @Model.Destinatario.TipoIeDest
+                                </dd>
+
+                                @if (!string.IsNullOrEmpty(Model.Destinatario.Ie))
+                                {
+                                    <dt class="col-sm-5">Inscrição Estadual</dt>
+                                    <dd class="col-sm-7">@Model.Destinatario.Ie</dd>
+                                }
+                            </dl>
+                        </div>
+
+                        <!-- Endereço -->
+                        <div class="col-md-6">
+                            <h6 class="border-bottom pb-2 mb-3">Endereço</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Logradouro</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Logradouro</dd>
+
+                                <dt class="col-sm-5">Número</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Numero</dd>
+
+                                <dt class="col-sm-5">Bairro</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Bairro</dd>
+
+                                <dt class="col-sm-5">Código Município</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.CodMun</dd>
+
+                                <dt class="col-sm-5">Município</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Municipio</dd>
+
+                                <dt class="col-sm-5">UF</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Uf</dd>
+
+                                <dt class="col-sm-5">CEP</dt>
+                                <dd class="col-sm-7">@Model.Destinatario.Cep</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person"></i> Dados do Destinatário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">Nenhum dado do destinatário cadastrado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Abas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="nfeTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#produtos" type="button" role="tab" aria-controls="produtos" aria-selected="true">
+                            <i class="bi bi-box-seam"></i> Produtos
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="nfeTabsContent">
+                    <!-- Aba Produtos -->
+                    <div class="tab-pane fade show active" id="produtos" role="tabpanel" aria-labelledby="produtos-tab">
+                        @if (Model.Itens != null && Model.Itens.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descrição</th>
+                                            <th>NCM</th>
+                                            <th>CFOP</th>
+                                            <th>Unidade</th>
+                                            <th class="text-end">Quantidade</th>
+                                            <th class="text-end">Valor Unitário</th>
+                                            <th class="text-end">Valor Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Itens)
+                                        {
+                                            <tr>
+                                                <td>@item.CodProduto</td>
+                                                <td>@item.Descricao</td>
+                                                <td>@item.Ncm</td>
+                                                <td>@item.Cfop</td>
+                                                <td>@item.Unidade</td>
+                                                <td class="text-end">@item.Quantidade.ToString("N4")</td>
+                                                <td class="text-end">@item.ValorUnitario.ToString("N4")</td>
+                                                <td class="text-end"><strong>@item.ValorTotal.ToString("C")</strong></td>
+                                            </tr>
+                                            @if (item.Imposto != null)
+                                            {
+                                                <tr class="table-light">
+                                                    <td colspan="8" class="p-0">
+                                                        <div class="p-3">
+                                                            <h6 class="mb-3"><i class="bi bi-receipt-cutoff"></i> Impostos do Item</h6>
+                                                            <div class="row g-3">
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small text-muted">Origem</label>
+                                                                    <div class="fw-bold">@item.Imposto.Origem</div>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small text-muted">CST/CSOSN</label>
+                                                                    <div class="fw-bold">@item.Imposto.CstCsosn</div>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small text-muted">Base ICMS</label>
+                                                                    <div class="fw-bold">@item.Imposto.BaseIcms.ToString("C")</div>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small text-muted">Alíquota ICMS</label>
+                                                                    <div class="fw-bold">@item.Imposto.AliquotaIcms.ToString("N2")%</div>
+                                                                </div>
+                                                                <div class="col-md-2">
+                                                                    <label class="form-label small text-muted">Valor ICMS</label>
+                                                                    <div class="fw-bold text-primary">@item.Imposto.ValorIcms.ToString("C")</div>
+                                                                </div>
+                                                                @if (item.Imposto.BasePis.HasValue || item.Imposto.ValorPis.HasValue)
+                                                                {
+                                                                    <div class="col-md-2">
+                                                                        <label class="form-label small text-muted">Base PIS</label>
+                                                                        <div class="fw-bold">@(item.Imposto.BasePis?.ToString("C") ?? "-")</div>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <label class="form-label small text-muted">Valor PIS</label>
+                                                                        <div class="fw-bold text-primary">@(item.Imposto.ValorPis?.ToString("C") ?? "-")</div>
+                                                                    </div>
+                                                                }
+                                                                @if (item.Imposto.BaseCofins.HasValue || item.Imposto.ValorCofins.HasValue)
+                                                                {
+                                                                    <div class="col-md-2">
+                                                                        <label class="form-label small text-muted">Base COFINS</label>
+                                                                        <div class="fw-bold">@(item.Imposto.BaseCofins?.ToString("C") ?? "-")</div>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <label class="form-label small text-muted">Valor COFINS</label>
+                                                                        <div class="fw-bold text-primary">@(item.Imposto.ValorCofins?.ToString("C") ?? "-")</div>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="7" class="text-end"><strong>Total:</strong></td>
+                                            <td class="text-end"><strong>@(Model.Itens?.Sum(i => i.ValorTotal) ?? 0).ToString("C")</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> Nenhum produto cadastrado para esta NF-e.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Ação -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.IdNfe" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
