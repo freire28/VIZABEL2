@@ -53,12 +53,10 @@ namespace GestaoPedidosVizabel.Services
             }
             else
             {
-                
+                // ambiente permanece 2 (Homologação)
+            }
 
-
-
-
-
+            
 
 
 
