@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Selecionar Setor";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Corte" data-etapa="2" onclick="selecionarSetor(2)">
+                        <i class="bi bi-scissors display-4 mb-3"></i>
+                        <h4 class="fw-bold">Corte</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Costura" data-etapa="3" onclick="selecionarSetor(3)">
+                        <i class="bi bi-thread display-4 mb-3"></i>
+                        <h4 class="fw-bold">Costura</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Acabamento" data-etapa="5" onclick="selecionarSetor(5)">
+                        <i class="bi bi-check-circle display-4 mb-3"></i>
+                        <h4 class="fw-bold">Acabamento</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Estamparia" data-etapa="6" onclick="selecionarSetor(6)">
+                        <i class="bi bi-palette display-4 mb-3"></i>
+                        <h4 class="fw-bold">Estamparia</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Estoque" data-etapa="4" onclick="selecionarSetor(4)">
+                        <i class="bi bi-box-seam display-4 mb-3"></i>
+                        <h4 class="fw-bold">Estoque</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Expedição" data-etapa="8" onclick="selecionarSetor(8)">
+                        <i class="bi bi-truck display-4 mb-3"></i>
+                        <h4 class="fw-bold">Expedição</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Sublimação" data-etapa="7" onclick="selecionarSetor(7)">
+                        <i class="bi bi-printer display-4 mb-3"></i>
+                        <h4 class="fw-bold">Sublimação</h4>
+                    </button>
+                </div>
+                
+                <div class="col-md-6 col-lg-3">
+                    <button type="button" class="btn btn-setor w-100 h-100 p-4" data-setor="Prensa" data-etapa="9" onclick="selecionarSetor(9)">
+                        <i class="bi bi-thermometer-high display-4 mb-3"></i>
+                        <h4 class="fw-bold">Prensa</h4>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function selecionarSetor(idEtapaProducao) {
+            var url = '@Url.Action("Index", "Home")?idEtapaProducao=' + idEtapaProducao;
+            window.location.href = url;
+        }
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

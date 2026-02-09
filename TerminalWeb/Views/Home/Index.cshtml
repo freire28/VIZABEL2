@@ -1,0 +1,2246 @@
+﻿@{
+    ViewData["Title"] = "Pedidos em Produção";
+    var pedidos = ViewBag.Pedidos as System.Data.DataTable;
+    var pedidoService = ViewBag.PedidoService as TerminalWeb.Services.PedidoService;
+    var idEtapaProducao = ViewBag.IdEtapaProducao ?? 4;
+    var error = ViewBag.Error as string;
+
+    // Mapeamento de IDs de etapa para nomes dos setores
+    var setores = new Dictionary<int, string>
+    {
+        { 2, "Corte" },
+        { 3, "Costura" },
+        { 4, "Estoque" },
+        { 5, "Acabamento" },
+        { 6, "Estamparia" },
+        { 7, "Sublimação" },
+        { 8, "Expedição" },
+        { 9, "Prensa" }
+    };
+
+    var nomeSetor = setores.ContainsKey(idEtapaProducao) ? setores[idEtapaProducao] : "Desconhecido";
+}
+
+<!-- Cabeçalho -->
+<div id="cabecalhoPrincipal" class="bg-primary text-white shadow-sm" style="padding: 0.5rem 0;">
+    <div id="containerCabecalho" class="container">
+        <div id="rowCabecalho" class="row align-items-center">
+            <div id="colCabecalho" class="col-12">
+                <h6 id="tituloPrincipal" class="mb-0 fs-5">
+                    <i class="bi bi-list-check me-2"></i>Pedidos em Produção
+                    <span id="badgeSetor" class="badge bg-light text-primary ms-3 fs-6">
+                        <i class="bi bi-building me-1"></i>Setor: @nomeSetor
+                    </span>
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="containerPrincipal" class="container mt-4">
+    <div id="rowPrincipal" class="row mb-4">
+        <div id="colPrincipal" class="col-12">
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div id="alertErro" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@error
+                    <button id="btnFecharErro" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (pedidos != null && pedidos.Rows.Count > 0)
+            {
+                <div id="rowPedidos" class="row g-3">
+                    @foreach (System.Data.DataRow row in pedidos.Rows)
+                    {
+                        // Buscar colunas com nomes flexíveis
+                        var codPedido = "";
+                        var idPedido = "";
+                        var idPedidoProduto = "";
+                        var idTamanho = "";
+                        var idGradePedProd = "";
+                        var dataEntrega = "";
+                        var descricao = "";
+                        var tamanho = "";
+                        var reposicao = "";
+                        var quantidade = "";
+
+                        // Debug: Listar todas as colunas disponíveis (apenas no primeiro registro)
+                        @if (pedidos.Rows.IndexOf(row) == 0)
+                        {
+                            <!-- DEBUG: Colunas disponíveis: @string.Join(", ", pedidos.Columns.Cast<System.Data.DataColumn>().Select(c => c.ColumnName)) -->
+                        }
+
+                        foreach (System.Data.DataColumn column in pedidos.Columns)
+                        {
+                            var columnName = column.ColumnName.ToUpper().Trim();
+                            var value = row[column]?.ToString() ?? "";
+
+                            // Buscar ID (campo ID da tabela PRODUTO_PEDIDO_ETAPA_PROD)
+                            if (string.IsNullOrEmpty(idPedido))
+                            {
+                                if (columnName == "ID")
+                                {
+                                    idPedido = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar ID_PEDIDO_PRODUTO
+                            if (string.IsNullOrEmpty(idPedidoProduto))
+                            {
+                                if (columnName == "ID_PEDIDO_PRODUTO" ||
+                                (columnName.Contains("PEDIDO") && columnName.Contains("PRODUTO") && columnName.Contains("ID")) ||
+                                columnName == "ID_PED_PROD")
+                                {
+                                    idPedidoProduto = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar ID_TAMANHO
+                            if (string.IsNullOrEmpty(idTamanho))
+                            {
+                                if (columnName == "ID_TAMANHO" || (columnName.Contains("TAMANHO") && columnName.Contains("ID")))
+                                {
+                                    idTamanho = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar ID_GRADE_PED_PROD
+                            if (string.IsNullOrEmpty(idGradePedProd))
+                            {
+                                if (columnName == "ID_GRADE_PED_PROD" || (columnName.Contains("GRADE") && columnName.Contains("PED")))
+                                {
+                                    idGradePedProd = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar COD_PEDIDO
+                            if (string.IsNullOrEmpty(codPedido))
+                            {
+                                if (columnName == "COD_PEDIDO" || columnName == "CODIGO_PEDIDO" ||
+                                (columnName.Contains("COD") && columnName.Contains("PEDIDO")))
+                                {
+                                    codPedido = value;
+                                    continue;
+                                }
+                                else if (columnName == "PEDIDO")
+                                {
+                                    codPedido = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar DATA_ENTREGA
+                            if (string.IsNullOrEmpty(dataEntrega))
+                            {
+                                if (columnName.Contains("DATA_ENTREGA") || columnName.Contains("DT_ENTREGA") ||
+                                columnName == "ENTREGA" || (columnName.Contains("DATA") && columnName.Contains("ENTREGA")))
+                                {
+                                    // Tentar converter para DateTime e formatar apenas a data
+                                    if (DateTime.TryParse(value, out DateTime data))
+                                    {
+                                        dataEntrega = data.ToString("dd/MM/yyyy");
+                                    }
+                                    else
+                                    {
+                                        dataEntrega = value;
+                                    }
+                                    continue;
+                                }
+                            }
+
+                            // Buscar DESCRICAO
+                            if (string.IsNullOrEmpty(descricao))
+                            {
+                                if (columnName == "DESCRICAO" || columnName == "DESC_PRODUTO" ||
+                                columnName.Contains("DESCRICAO") || (columnName.Contains("DESC") && !columnName.Contains("REPOS")))
+                                {
+                                    descricao = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar TAMANHO
+                            if (string.IsNullOrEmpty(tamanho))
+                            {
+                                if (columnName == "TAMANHO" || columnName == "TAM" ||
+                                columnName.Contains("TAMANHO") || columnName == "T")
+                                {
+                                    tamanho = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar REPOSICAO
+                            if (string.IsNullOrEmpty(reposicao))
+                            {
+                                if (columnName.Contains("REPOSICAO") || columnName.Contains("REPOS") ||
+                                columnName == "INFO_REPOSICAO" || columnName.Contains("INFO_REPOS"))
+                                {
+                                    reposicao = value;
+                                    continue;
+                                }
+                            }
+
+                            // Buscar QUANTIDADE
+                            if (string.IsNullOrEmpty(quantidade))
+                            {
+                                if (columnName == "QUANTIDADE" || columnName == "QTD" ||
+                                columnName.Contains("QUANTIDADE") || columnName.Contains("QTD"))
+                                {
+                                    quantidade = value;
+                                    continue;
+                                }
+                            }
+                        }
+
+                        <!-- primeira coluna : Dados de pedido  -->
+                        <div id="colDadosPedido_@idPedido" class="col-md-8">
+                            <div id="cardPedido_@idPedido" class="card pedido-card shadow-sm mb-3">
+                                <div id="cardBodyPedido_@idPedido" class="card-body">
+                                    <!-- Primeira linha: COD_PEDIDO e Data da Entrega -->
+                                    <div id="rowCodigoData_@idPedido" class="row mb-2 pb-2 border-bottom">
+                                        <div id="colCodigo_@idPedido" class="col-md-6">
+                                            <strong id="labelCodigo_@idPedido" class="text-primary" style="font-size: 1.5rem;">
+                                                <i class="bi bi-tag me-2"></i>Código Pedido:
+                                            </strong>
+                                            <span id="valorCodigo_@idPedido" class="fs-3 fw-bold">@codPedido</span>
+                                        </div>
+                                        <div id="colDataEntrega_@idPedido" class="col-md-6 text-md-end">
+                                            <strong id="labelDataEntrega_@idPedido" class="text-primary" style="font-size: 1.5rem;">
+                                                <i class="bi bi-calendar-event me-2"></i>Data Entrega:
+                                            </strong>
+                                            <span id="valorDataEntrega_@idPedido" style="font-size: 1.5rem;">@dataEntrega</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Segunda linha: Descrição, Quantidade e Tamanho -->
+                                    <div id="rowDescricaoTamanho_@idPedido" class="row mb-2 pb-2 border-bottom">
+                                        <div id="colDescricao_@idPedido" class="col-md-6">
+                                            <strong id="labelDescricao_@idPedido" class="text-primary" style="font-size: 1.5rem;">
+                                                <i class="bi bi-box me-2"></i>Descrição:
+                                            </strong>
+                                            <span id="valorDescricao_@idPedido" style="font-size: 1.5rem;">@descricao</span>
+                                        </div>
+
+                                        <div id="colTamanho_@idPedido" class="col-md-6 text-md-end">
+                                            <strong id="labelTamanho_@idPedido" class="text-primary" style="font-size: 1.5rem;">
+                                                <i class="bi bi-rulers me-2"></i>Tamanho:
+                                            </strong>
+                                            <span id="valorTamanho_@idPedido" style="font-size: 1.5rem;">@tamanho <span style="margin: 0 0.5rem;">|</span> <span class="fw-bold">@quantidade</span></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Terceira linha: Informação Reposição -->
+                                    @if (!string.IsNullOrEmpty(reposicao))
+                                    {
+                                        <div id="rowReposicao_@idPedido" class="row">
+                                            <div id="colReposicao_@idPedido" class="col-12">
+                                                <strong id="labelReposicao_@idPedido" class="text-primary" style="font-size: 1.5rem;">
+                                                    <i class="bi bi-info-circle me-2"></i>Reposição:
+                                                </strong>
+                                                <span id="valorReposicao_@idPedido" style="font-size: 1.5rem;">@reposicao</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Segunda coluna: Botões dos Funcionários -->
+                        <div id="colFuncionarios_@idPedido" class="col-md-4">
+                            <div id="cardFuncionarios_@idPedido" class="card shadow-sm mb-3">
+                                <div id="cardBodyFuncionarios_@idPedido" class="card-body">
+                                    @{
+                                        System.Data.DataTable funcionarios = null;
+                                        if (pedidoService != null)
+                                        {
+                                            int? idPedidoInt = null;
+                                            if (!string.IsNullOrEmpty(idPedido) && int.TryParse(idPedido, out int id))
+                                            {
+                                                idPedidoInt = id;
+                                            }
+                                            funcionarios = pedidoService.BuscarFuncionariosDisponiveis(idEtapaProducao, idPedidoInt);
+                                        }
+                                    }
+
+                                    @if (funcionarios != null && funcionarios.Rows.Count > 0)
+                                    {
+                                        <div id="rowBotoesFuncionarios_@idPedido" class="row g-2 justify-content-center">
+                                            @foreach (System.Data.DataRow funcRow in funcionarios.Rows)
+                                            {
+                                                var idFuncionario = funcRow["ID_FUNCIONARIO"]?.ToString() ?? "";
+                                                var nomeFuncionario = funcRow["NOME"]?.ToString() ?? "";
+
+                                                // Verificar se o funcionário está associado (se existe a coluna ID_PEDIDO_PRODUTO que só vem da query de associado)
+                                                bool isAssociado = funcionarios.Columns.Contains("ID_PEDIDO_PRODUTO") &&
+                                                funcRow["ID_PEDIDO_PRODUTO"] != null &&
+                                                funcRow["ID_PEDIDO_PRODUTO"] != DBNull.Value;
+                                                string classeBotao = isAssociado ? "btn btn-outline-primary btn-funcionario btn-funcionario-associado w-100" : "btn btn-outline-primary btn-funcionario w-100";
+
+                                                // Escapar aspas simples nos valores para JavaScript
+                                                var codPedidoEscapado = codPedido.Replace("'", "\\'");
+                                                var dataEntregaEscapada = dataEntrega.Replace("'", "\\'");
+                                                var descricaoEscapada = descricao.Replace("'", "\\'");
+                                                var tamanhoEscapado = tamanho.Replace("'", "\\'");
+                                                var quantidadeEscapada = (string.IsNullOrEmpty(quantidade) ? "0" : quantidade).Replace("'", "\\'");
+
+                                                <div id="colBtnFuncionario_@(idPedido)_@(idFuncionario)" class="col-4">
+                                                    <button id="btnFuncionario_@(idPedido)_@(idFuncionario)" type="button"
+                                                            class="@classeBotao"
+                                                            data-id="@(string.IsNullOrEmpty(idPedido) ? "-1" : idPedido)"
+                                                            data-id-funcionario="@idFuncionario"
+                                                            data-cod-pedido="@codPedido"
+                                                            data-nome-funcionario="@nomeFuncionario"
+                                                            data-id-pedido-produto="@(string.IsNullOrEmpty(idPedidoProduto) ? "-1" : idPedidoProduto)"
+                                                            data-id-tamanho="@(string.IsNullOrEmpty(idTamanho) ? "-1" : idTamanho)"
+                                                            data-id-grade-ped-prod="@(string.IsNullOrEmpty(idGradePedProd) ? "-1" : idGradePedProd)"
+                                                            data-id-etapa-producao="@idEtapaProducao"
+                                                            data-is-associado="@(isAssociado ? "true" : "false")"
+                                                            data-cod-pedido-esc="@codPedidoEscapado"
+                                                            data-data-entrega-esc="@dataEntregaEscapada"
+                                                            data-descricao-esc="@descricaoEscapada"
+                                                            data-tamanho-esc="@tamanhoEscapado"
+                                                            data-quantidade-esc="@quantidadeEscapada"
+                                                            onclick="abrirModalSenhaFuncionario(this, '@idFuncionario', '@codPedido', '@nomeFuncionario', '@(string.IsNullOrEmpty(idPedidoProduto) ? "-1" : idPedidoProduto)', '@(string.IsNullOrEmpty(idTamanho) ? "-1" : idTamanho)', '@(string.IsNullOrEmpty(idGradePedProd) ? "-1" : idGradePedProd)', '@idEtapaProducao')">
+                                                        <i class="bi bi-person me-1"></i>@nomeFuncionario
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p id="msgSemFuncionarios_@idPedido" class="text-muted mb-0">
+                                            <i class="bi bi-info-circle me-2"></i>Nenhum funcionário disponível
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (pedidos != null)
+            {
+                <div id="alertSemPedidos" class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>Nenhum pedido encontrado para a etapa de produção @idEtapaProducao.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Contador visual (botão clicável) -->
+<button type="button" id="contadorTimer" class="btn btn-timer" style="position: fixed; top: 20px; right: 20px; background: #667eea; color: white; padding: 10px 10x; border-radius: 50%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10000; display: none; border: none; cursor: pointer; width: 50px; height: 50px; min-width: 50px; font-size: 1.2rem; font-weight: bold;">
+    <span id="tempoRestante">10</span>
+</button>
+
+<!-- Modal para Selecionar Setor -->
+<div class="modal fade" id="modalSelecionarSetor" tabindex="-1" aria-labelledby="modalSelecionarSetorLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalSelecionarSetorLabel">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>Selecionar Setor
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="conteudoSelecionarSetor">
+                <div id="divCarregandoSetor" class="text-center p-5">
+                    <div id="spinnerSetor" class="spinner-border text-primary" role="status">
+                        <span id="spanCarregandoSetor" class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p id="pCarregandoSetor" class="mt-3">Carregando setores...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Digitar Senha -->
+<div class="modal fade" id="modalDigitarSenha" tabindex="-1" aria-labelledby="modalDigitarSenhaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0" id="conteudoDigitarSenha">
+                <div id="divCarregandoSenha" class="text-center p-5">
+                    <div id="spinnerSenha" class="spinner-border text-primary" role="status">
+                        <span id="spanCarregandoSenha" class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Estoque/Separação -->
+<div class="modal fade" id="modalEstoqueSeparacao" tabindex="-1" aria-labelledby="modalEstoqueSeparacaoLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0" id="conteudoEstoqueSeparacao">
+                <div id="divCarregandoEstoque" class="text-center p-5">
+                    <div id="spinnerEstoque" class="spinner-border text-primary" role="status">
+                        <span id="spanCarregandoEstoque" class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Concluir Etapa -->
+<div class="modal fade" id="modalConcluirEtapa" tabindex="-1" aria-labelledby="modalConcluirEtapaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0" id="conteudoConcluirEtapa">
+                <div id="divCarregandoConcluir" class="text-center p-5">
+                    <div id="spinnerConcluir" class="spinner-border text-primary" role="status">
+                        <span id="spanCarregandoConcluir" class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Expedição -->
+<div class="modal fade" id="modalExpedicao" tabindex="-1" aria-labelledby="modalExpedicaoLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0" id="conteudoExpedicao">
+                <div id="divCarregandoExpedicao" class="text-center p-5">
+                    <div id="spinnerExpedicao" class="spinner-border text-primary" role="status">
+                        <span id="spanCarregandoExpedicao" class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Customizado para Alertas e Confirmações -->
+<div class="modal fade" id="modalAlert" tabindex="-1" aria-labelledby="modalAlertLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="modalAlertHeader">
+                <h5 class="modal-title" id="modalAlertLabel" style="font-size: 2rem;">
+                    <i class="bi bi-info-circle me-2" id="modalAlertIcon" style="font-size: 2rem;"></i>
+                    <span id="modalAlertTitle">Aviso</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar" id="btnCloseAlert"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalAlertMessage" class="mb-0" style="font-size: 2rem;"></p>
+            </div>
+            <div class="modal-footer" id="modalAlertFooter">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="btnOkAlert" style="font-size: 1.5rem; padding: 0.75rem 2rem;">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Customizado para Confirmações -->
+<div class="modal fade" id="modalConfirm" tabindex="-1" aria-labelledby="modalConfirmLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="modalConfirmLabel" style="font-size: 2rem;">
+                    <i class="bi bi-exclamation-triangle me-2" style="font-size: 2rem;"></i>
+                    Confirmação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalConfirmMessage" class="mb-0" style="font-size: 2rem;"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelConfirm" style="font-size: 1.5rem; padding: 0.75rem 2rem;">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmConfirm" style="font-size: 1.5rem; padding: 0.75rem 2rem;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Funções para exibir popups customizados
+        function showAlert(mensagem, tipo = 'info') {
+            return new Promise((resolve) => {
+                var modal = document.getElementById('modalAlert');
+                var modalElement = new bootstrap.Modal(modal);
+                var messageEl = document.getElementById('modalAlertMessage');
+                var titleEl = document.getElementById('modalAlertTitle');
+                var iconEl = document.getElementById('modalAlertIcon');
+                var headerEl = document.getElementById('modalAlertHeader');
+
+                messageEl.textContent = mensagem;
+
+                // Configurar estilo baseado no tipo
+                if (tipo === 'error' || tipo === 'danger') {
+                    titleEl.textContent = 'Erro';
+                    iconEl.className = 'bi bi-exclamation-circle me-2';
+                    headerEl.className = 'modal-header bg-danger text-white';
+                } else if (tipo === 'success') {
+                    titleEl.textContent = 'Sucesso';
+                    iconEl.className = 'bi bi-check-circle me-2';
+                    headerEl.className = 'modal-header bg-success text-white';
+                } else if (tipo === 'warning') {
+                    titleEl.textContent = 'Aviso';
+                    iconEl.className = 'bi bi-exclamation-triangle me-2';
+                    headerEl.className = 'modal-header bg-warning';
+                } else {
+                    titleEl.textContent = 'Informação';
+                    iconEl.className = 'bi bi-info-circle me-2';
+                    headerEl.className = 'modal-header bg-primary text-white';
+                }
+
+                // Limpar eventos anteriores e adicionar novo
+                var btnOk = document.getElementById('btnOkAlert');
+                var newBtnOk = btnOk.cloneNode(true);
+                btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+
+                newBtnOk.addEventListener('click', function() {
+                    modalElement.hide();
+                    resolve();
+                });
+
+                modal.addEventListener('hidden.bs.modal', function() {
+                    resolve();
+                }, { once: true });
+
+                modalElement.show();
+            });
+        }
+
+        function showConfirm(mensagem) {
+            return new Promise((resolve) => {
+                var modal = document.getElementById('modalConfirm');
+                var modalElement = new bootstrap.Modal(modal);
+                var messageEl = document.getElementById('modalConfirmMessage');
+
+                messageEl.textContent = mensagem;
+
+                // Limpar eventos anteriores
+                var btnConfirm = document.getElementById('btnConfirmConfirm');
+                var btnCancel = document.getElementById('btnCancelConfirm');
+
+                var newBtnConfirm = btnConfirm.cloneNode(true);
+                var newBtnCancel = btnCancel.cloneNode(true);
+                btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+                btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+                newBtnConfirm.addEventListener('click', function() {
+                    modalElement.hide();
+                    resolve(true);
+                });
+
+                newBtnCancel.addEventListener('click', function() {
+                    modalElement.hide();
+                    resolve(false);
+                });
+
+                modal.addEventListener('hidden.bs.modal', function() {
+                    resolve(false);
+                }, { once: true });
+
+                modalElement.show();
+            });
+        }
+
+        (function() {
+            var contadorEl = document.getElementById('contadorTimer');
+            var tempoEl = document.getElementById('tempoRestante');
+            var intervalo = null;
+            var tempoRestante = 10;
+            var isPausadoManual = false;
+
+            function pausarTimer() {
+                if (intervalo) {
+                    clearInterval(intervalo);
+                    intervalo = null;
+                }
+                if (contadorEl) {
+                    contadorEl.style.display = 'none';
+                }
+            }
+
+            function togglePausaManual() {
+                isPausadoManual = !isPausadoManual;
+
+                if (isPausadoManual) {
+                    if (intervalo) {
+                        clearInterval(intervalo);
+                        intervalo = null;
+                    }
+                    contadorEl.style.background = '#dc3545';
+                } else {
+                    contadorEl.style.background = '#667eea';
+                    iniciarIntervalo();
+                }
+            }
+
+            if (contadorEl) {
+                contadorEl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    togglePausaManual();
+                });
+            }
+
+            function iniciarIntervalo() {
+                if (isPausadoManual) {
+                    return;
+                }
+                if (intervalo) {
+                    clearInterval(intervalo);
+                    intervalo = null;
+                }
+                intervalo = setInterval(function() {
+                    if (isPausadoManual) {
+                        return;
+                    }
+                    tempoRestante--;
+                    tempoEl.textContent = tempoRestante;
+                    if (tempoRestante <= 0) {
+                        clearInterval(intervalo);
+                        intervalo = null;
+                        contadorEl.style.display = 'none';
+
+                        var modalSetor = bootstrap.Modal.getInstance(document.getElementById('modalSelecionarSetor'));
+                        var modalSenha = bootstrap.Modal.getInstance(document.getElementById('modalDigitarSenha'));
+
+                        if (!modalSetor || !modalSetor._isShown) {
+                            var url = '@Url.Action("SelecionarSetorPartial", "Home")';
+                            var conteudoEl = document.getElementById('conteudoSelecionarSetor');
+                            fetch(url)
+                                .then(response => response.text())
+                                .then(html => {
+                                    conteudoEl.innerHTML = html;
+                                    var modalElement = document.getElementById('modalSelecionarSetor');
+                                    var modal = new bootstrap.Modal(modalElement, {
+                                        backdrop: 'static',
+                                        keyboard: false
+                                    });
+                                    modal.show();
+                                })
+                                .catch(error => {
+                                    console.error('Erro ao carregar conteúdo:', error);
+                                    conteudoEl.innerHTML = '<div class="alert alert-danger m-4">Erro ao carregar a tela de seleção de setor.</div>';
+                                    var modalElement = document.getElementById('modalSelecionarSetor');
+                                    var modal = new bootstrap.Modal(modalElement);
+                                    modal.show();
+                                });
+                        }
+                    }
+                }, 1000);
+            }
+
+            function retomarTimer() {
+                var modalSetor = bootstrap.Modal.getInstance(document.getElementById('modalSelecionarSetor'));
+                var modalSenha = bootstrap.Modal.getInstance(document.getElementById('modalDigitarSenha'));
+
+                if ((modalSetor && modalSetor._isShown) || (modalSenha && modalSenha._isShown)) {
+                    return;
+                }
+                if (isPausadoManual) {
+                    return;
+                }
+                contadorEl.style.display = 'block';
+                contadorEl.style.zIndex = '10000';
+                iniciarIntervalo();
+            }
+
+            function iniciarTimer() {
+                var modalSetor = bootstrap.Modal.getInstance(document.getElementById('modalSelecionarSetor'));
+                var modalSenha = bootstrap.Modal.getInstance(document.getElementById('modalDigitarSenha'));
+                if ((modalSetor && modalSetor._isShown) || (modalSenha && modalSenha._isShown)) {
+                    if (contadorEl) {
+                        contadorEl.style.display = 'none';
+                    }
+                    return;
+                }
+
+                if (intervalo) {
+                    clearInterval(intervalo);
+                    intervalo = null;
+                }
+                isPausadoManual = false;
+
+                contadorEl.style.display = 'block';
+                contadorEl.style.zIndex = '10000';
+                contadorEl.style.background = '#667eea';
+                tempoRestante = 10;
+                tempoEl.textContent = tempoRestante;
+                iniciarIntervalo();
+            }
+
+            var modalSetorElement = document.getElementById('modalSelecionarSetor');
+            modalSetorElement.addEventListener('show.bs.modal', function() {
+                pausarTimer();
+            });
+            modalSetorElement.addEventListener('hidden.bs.modal', function() {
+                iniciarTimer();
+            });
+
+            var modalSenhaElement = document.getElementById('modalDigitarSenha');
+            modalSenhaElement.addEventListener('show.bs.modal', function() {
+                pausarTimer();
+            });
+            modalSenhaElement.addEventListener('hidden.bs.modal', function() {
+                retomarTimer();
+            });
+
+            var modalEstoqueElement = document.getElementById('modalEstoqueSeparacao');
+            modalEstoqueElement.addEventListener('show.bs.modal', function() {
+                pausarTimer();
+            });
+            modalEstoqueElement.addEventListener('hidden.bs.modal', function() {
+                retomarTimer();
+            });
+
+            iniciarTimer();
+        })();
+
+        function selecionarSetor(idEtapaProducao) {
+            var modalSetorElement = document.getElementById('modalSelecionarSetor');
+            var modalSetor = bootstrap.Modal.getInstance(modalSetorElement);
+            if (modalSetor) {
+                modalSetor.hide();
+            }
+            var url = '@Url.Action("Index", "Home")?idEtapaProducao=' + idEtapaProducao;
+            window.location.href = url;
+        }
+
+        function abrirModalSenhaFuncionario(buttonElement, idFuncionario, codPedido, nomeFuncionario, idPedidoProduto, idTamanho, idGradePedProd, idEtapaProducao) {
+            var url = '@Url.Action("DigitarSenha", "Home")';
+            var conteudoEl = document.getElementById('conteudoDigitarSenha');
+
+            // Buscar dados adicionais do botão clicado (se existirem)
+            var idChave = buttonElement ? buttonElement.getAttribute('data-id') || '-1' : '-1';
+            var isAssociado = buttonElement ? buttonElement.getAttribute('data-is-associado') === 'true' : false;
+            var codPedidoEsc = buttonElement ? buttonElement.getAttribute('data-cod-pedido-esc') || '' : '';
+            var dataEntregaEsc = buttonElement ? buttonElement.getAttribute('data-data-entrega-esc') || '' : '';
+            var descricaoEsc = buttonElement ? buttonElement.getAttribute('data-descricao-esc') || '' : '';
+            var tamanhoEsc = buttonElement ? buttonElement.getAttribute('data-tamanho-esc') || '' : '';
+            var quantidadeEsc = buttonElement ? buttonElement.getAttribute('data-quantidade-esc') || '0' : '0';
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    conteudoEl.innerHTML = html;
+                    conteudoEl.setAttribute('data-id', idChave);
+                    conteudoEl.setAttribute('data-id-funcionario', idFuncionario);
+                    conteudoEl.setAttribute('data-cod-pedido', codPedido);
+                    conteudoEl.setAttribute('data-nome-funcionario', nomeFuncionario);
+                    conteudoEl.setAttribute('data-id-pedido-produto', idPedidoProduto);
+                    conteudoEl.setAttribute('data-id-tamanho', idTamanho);
+                    conteudoEl.setAttribute('data-id-grade-ped-prod', idGradePedProd);
+                    conteudoEl.setAttribute('data-id-etapa-producao', idEtapaProducao);
+                    conteudoEl.setAttribute('data-is-associado', isAssociado);
+                    conteudoEl.setAttribute('data-cod-pedido-esc', codPedidoEsc);
+                    conteudoEl.setAttribute('data-data-entrega-esc', dataEntregaEsc);
+                    conteudoEl.setAttribute('data-descricao-esc', descricaoEsc);
+                    conteudoEl.setAttribute('data-tamanho-esc', tamanhoEsc);
+                    conteudoEl.setAttribute('data-quantidade-esc', quantidadeEsc);
+
+                    var modalElement = document.getElementById('modalDigitarSenha');
+                    var modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    modal.show();
+
+                    setTimeout(function() {
+                        inicializarTecladoNumericoFuncionario();
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar modal de senha:', error);
+                    conteudoEl.innerHTML = '<div class="alert alert-danger m-4">Erro ao carregar o teclado numérico.</div>';
+                    var modalElement = document.getElementById('modalDigitarSenha');
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                });
+        }
+
+        function abrirModalEstoqueSeparacao(codPedido, dataEntrega, descricao, tamanho, quantidade, idChave, idFuncionario, idPedidoProduto, idTamanho, idGradePedProd, idEtapaProducao) {
+            var url = '@Url.Action("EstoqueSeparacao", "Home")';
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    conteudoEl.innerHTML = html;
+
+                    // Armazenar os IDs no elemento do modal para uso posterior
+                    conteudoEl.setAttribute('data-id-chave', idChave || '-1');
+                    conteudoEl.setAttribute('data-id-funcionario', idFuncionario || '0');
+                    conteudoEl.setAttribute('data-id-pedido-produto', idPedidoProduto || '-1');
+                    conteudoEl.setAttribute('data-id-tamanho', idTamanho || '-1');
+                    conteudoEl.setAttribute('data-id-grade-ped-prod', idGradePedProd || '-1');
+                    conteudoEl.setAttribute('data-id-etapa-producao', idEtapaProducao || '4');
+
+                    // Preencher os dados do pedido
+                    document.getElementById('estoqueCodPedido').textContent = codPedido || '-';
+                    document.getElementById('estoqueDataEntrega').textContent = dataEntrega || '-';
+                    document.getElementById('estoqueDescricao').textContent = descricao || '-';
+                    document.getElementById('estoqueTamanho').textContent = tamanho || '-';
+                    document.getElementById('estoqueQuantidade').textContent = quantidade || '0';
+
+                    // Definir o valor inicial da caixa de texto com a quantidade
+                    var inputEstoque = document.getElementById('estoqueEmEstoque');
+                    if (inputEstoque) {
+                        inputEstoque.value = quantidade || '0';
+                    }
+
+                    // Inicializar os eventos dos botões
+                    if (typeof inicializarEstoqueSeparacao === 'function') {
+                        setTimeout(function() {
+                            inicializarEstoqueSeparacao();
+                        }, 100);
+                    }
+
+                    var modalElement = document.getElementById('modalEstoqueSeparacao');
+                    var modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+
+                    // Inicializar também quando o modal for completamente exibido
+                    modalElement.addEventListener('shown.bs.modal', function() {
+                        if (typeof inicializarEstoqueSeparacao === 'function') {
+                            inicializarEstoqueSeparacao();
+                        }
+                    }, { once: true });
+
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar modal de estoque:', error);
+                    conteudoEl.innerHTML = '<div class="alert alert-danger m-4">Erro ao carregar a tela de estoque.</div>';
+                    var modalElement = document.getElementById('modalEstoqueSeparacao');
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                });
+        }
+
+        function abrirModalExpedicao(idPedido) {
+            var url = '@Url.Action("Expedicao", "Home")?idPedido=' + idPedido;
+            var conteudoEl = document.getElementById('conteudoExpedicao');
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    conteudoEl.innerHTML = html;
+                    
+                    // Aguardar um pouco para garantir que o DOM foi atualizado
+                    setTimeout(function() {
+                        // Inicializar eventos dos botões
+                        if (typeof inicializarBotaoImprimirEtiqueta === 'function') {
+                            inicializarBotaoImprimirEtiqueta();
+                        }
+                        if (typeof inicializarBotaoImprimirPedido === 'function') {
+                            inicializarBotaoImprimirPedido();
+                        }
+                    }, 100);
+                    
+                    var modalElement = document.getElementById('modalExpedicao');
+                    var modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+
+                    // Limpar conteúdo quando o modal for fechado
+                    modalElement.addEventListener('hidden.bs.modal', function() {
+                        conteudoEl.innerHTML = '<div id="divCarregandoExpedicao" class="text-center p-5"><div id="spinnerExpedicao" class="spinner-border text-primary" role="status"><span id="spanCarregandoExpedicao" class="visually-hidden">Carregando...</span></div></div>';
+                    }, { once: true });
+
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar modal de expedição:', error);
+                    conteudoEl.innerHTML = '<div class="alert alert-danger m-4">Erro ao carregar a tela de expedição.</div>';
+                    var modalElement = document.getElementById('modalExpedicao');
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                });
+        }
+
+        function abrirModalConcluirEtapa(codPedido, dataEntrega, descricao, tamanho, quantidade, idChave, idPedidoProduto, idTamanho, idGradePedProd) {
+            var url = '@Url.Action("ConcluirEtapa", "Home")';
+            var conteudoEl = document.getElementById('conteudoConcluirEtapa');
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    conteudoEl.innerHTML = html;
+
+                    // Armazenar os IDs no elemento do modal para uso posterior
+                    conteudoEl.setAttribute('data-id-chave', idChave || '-1');
+                    conteudoEl.setAttribute('data-id-pedido-produto', idPedidoProduto || '-1');
+                    conteudoEl.setAttribute('data-id-tamanho', idTamanho || '-1');
+                    conteudoEl.setAttribute('data-id-grade-ped-prod', idGradePedProd || '-1');
+
+                    // Preencher os dados do pedido
+                    document.getElementById('concluirCodPedido').textContent = codPedido || '-';
+                    document.getElementById('concluirDataEntrega').textContent = dataEntrega || '-';
+                    document.getElementById('concluirDescricao').textContent = descricao || '-';
+                    document.getElementById('concluirTamanho').textContent = tamanho || '-';
+                    document.getElementById('concluirQuantidade').textContent = quantidade || '0';
+
+                    // Inicializar os eventos
+                    if (typeof inicializarConcluirEtapa === 'function') {
+                        setTimeout(function() {
+                            inicializarConcluirEtapa();
+                        }, 100);
+                    }
+
+                    var modalElement = document.getElementById('modalConcluirEtapa');
+                    var modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+
+                    // Limpar conteúdo quando o modal for fechado
+                    modalElement.addEventListener('hidden.bs.modal', function() {
+                        conteudoEl.innerHTML = '<div id="divCarregandoConcluir" class="text-center p-5"><div id="spinnerConcluir" class="spinner-border text-primary" role="status"><span id="spanCarregandoConcluir" class="visually-hidden">Carregando...</span></div></div>';
+                    }, { once: true });
+
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar modal de concluir etapa:', error);
+                    conteudoEl.innerHTML = '<div class="alert alert-danger m-4">Erro ao carregar a tela de concluir etapa.</div>';
+                    var modalElement = document.getElementById('modalConcluirEtapa');
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                });
+        }
+
+        function inicializarTecladoNumericoFuncionario() {
+            var senhaInput = document.getElementById('senhaInput');
+            if (!senhaInput) return;
+
+            var senha = '';
+
+            function atualizarVisor() {
+                if (senhaInput) {
+                    senhaInput.value = senha;
+                }
+            }
+
+            document.querySelectorAll('.btn-numero').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (senha.length < 5) {
+                        var numero = this.getAttribute('data-numero');
+                        senha += numero;
+                        atualizarVisor();
+                    }
+                });
+            });
+
+            var btnApagar = document.getElementById('btnApagar');
+            if (btnApagar) {
+                var novoBtnApagar = btnApagar.cloneNode(true);
+                btnApagar.parentNode.replaceChild(novoBtnApagar, btnApagar);
+                document.getElementById('btnApagar').addEventListener('click', function() {
+                    senha = senha.slice(0, -1);
+                    atualizarVisor();
+                });
+            }
+
+            var btnConfirmar = document.getElementById('btnConfirmar');
+            if (btnConfirmar) {
+                var novoBtnConfirmar = btnConfirmar.cloneNode(true);
+                btnConfirmar.parentNode.replaceChild(novoBtnConfirmar, btnConfirmar);
+                document.getElementById('btnConfirmar').addEventListener('click', function() {
+                    if (senha.length === 0) {
+                        showAlert('Por favor, digite uma senha', 'warning');
+                        return;
+                    }
+
+                    if (senha.length < 5) {
+                        showAlert('A senha deve ter 5 dígitos', 'warning');
+                        return;
+                    }
+
+                    var conteudoEl = document.getElementById('conteudoDigitarSenha');
+                    var idFuncionario = parseInt(conteudoEl.getAttribute('data-id-funcionario')) || 0;
+                    var codPedido = conteudoEl.getAttribute('data-cod-pedido');
+                    var nomeFuncionario = conteudoEl.getAttribute('data-nome-funcionario');
+                    var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+                    var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+                    var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+                    var idEtapaProducaoStr = conteudoEl.getAttribute('data-id-etapa-producao') || '4';
+
+                    var idPedidoProduto = parseInt(idPedidoProdutoStr) || (idPedidoProdutoStr === '-1' ? -1 : 0);
+                    var idTamanho = parseInt(idTamanhoStr) || (idTamanhoStr === '-1' ? -1 : 0);
+                    var idGradePedProd = parseInt(idGradePedProdStr) || (idGradePedProdStr === '-1' ? -1 : 0);
+                    var idEtapaProducao = parseInt(idEtapaProducaoStr) || 4;
+
+                    // Debug: verificar valores antes de enviar
+                    console.log('Valores capturados:', {
+                        idPedidoProduto: idPedidoProduto,
+                        idTamanho: idTamanho,
+                        idGradePedProd: idGradePedProd,
+                        idEtapaProducao: idEtapaProducao,
+                        idFuncionario: idFuncionario
+                    });
+
+                    // Validar senha e associar funcionário via AJAX
+                    fetch('@Url.Action("ValidarSenha", "Home")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pin: senha,
+                            idFuncionario: idFuncionario,
+                            idPedidoProduto: idPedidoProduto,
+                            idTamanho: idTamanho,
+                            idGradePedProd: idGradePedProd,
+                            idEtapaProducao: idEtapaProducao
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.sucesso) {
+                            var modal = bootstrap.Modal.getInstance(document.getElementById('modalDigitarSenha'));
+                            if (modal) {
+                                modal.hide();
+                            }
+
+                            // Verificar se o funcionário está associado (vem da resposta do servidor)
+                            var funcionarioAssociado = data.funcionarioAssociado === true;
+                            var idEtapaProducaoStr = conteudoEl.getAttribute('data-id-etapa-producao') || '4';
+                            var idEtapaProducao = parseInt(idEtapaProducaoStr) || 4;
+                            var idPedido = data.idPedido || null;
+
+                            // Se a etapa for 8 (Expedição), abrir diretamente a tela de Expedição
+                            if (idEtapaProducao === 8) {
+                                if (idPedido && idPedido > 0) {
+                                    setTimeout(function() {
+                                        abrirModalExpedicao(idPedido);
+                                    }, 300);
+                                } else {
+                                    // Tentar buscar o ID_PEDIDO do idPedidoProduto
+                                    var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+                                    var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+                                    if (idPedidoProduto > 0) {
+                                        // Buscar ID_PEDIDO via AJAX
+                                        fetch('@Url.Action("BuscarIdPedido", "Home")?idPedidoProduto=' + idPedidoProduto)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.sucesso && data.idPedido > 0) {
+                                                    setTimeout(function() {
+                                                        abrirModalExpedicao(data.idPedido);
+                                                    }, 300);
+                                                } else {
+                                                    showAlert('Erro ao buscar ID do pedido.', 'error');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Erro ao buscar ID do pedido:', error);
+                                                showAlert('Erro ao buscar ID do pedido.', 'error');
+                                            });
+                                    } else {
+                                        showAlert('Erro: ID do pedido não encontrado.', 'error');
+                                    }
+                                }
+                                return;
+                            }
+
+                            if (funcionarioAssociado) {
+                                // Se o funcionário está associado, verificar qual tela abrir
+                                var idChaveStr = conteudoEl.getAttribute('data-id') || '-1';
+                                var idFuncionarioStr = conteudoEl.getAttribute('data-id-funcionario') || '0';
+                                var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+                                var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+                                var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+                                var codPedidoEsc = conteudoEl.getAttribute('data-cod-pedido-esc') || '';
+                                var dataEntregaEsc = conteudoEl.getAttribute('data-data-entrega-esc') || '';
+                                var descricaoEsc = conteudoEl.getAttribute('data-descricao-esc') || '';
+                                var tamanhoEsc = conteudoEl.getAttribute('data-tamanho-esc') || '';
+                                var quantidadeEsc = conteudoEl.getAttribute('data-quantidade-esc') || '0';
+
+                                // Decodificar os valores escapados
+                                var codPedidoDecod = codPedidoEsc.replace(/\\'/g, "'");
+                                var dataEntregaDecod = dataEntregaEsc.replace(/\\'/g, "'");
+                                var descricaoDecod = descricaoEsc.replace(/\\'/g, "'");
+                                var tamanhoDecod = tamanhoEsc.replace(/\\'/g, "'");
+                                var quantidadeDecod = quantidadeEsc.replace(/\\'/g, "'");
+
+                                setTimeout(function() {
+                                    // Se a etapa for diferente de 4, abrir tela de Concluir Etapa
+                                    if (idEtapaProducao !== 4) {
+                                        abrirModalConcluirEtapa(
+                                            codPedidoDecod,
+                                            dataEntregaDecod,
+                                            descricaoDecod,
+                                            tamanhoDecod,
+                                            quantidadeDecod,
+                                            parseInt(idChaveStr) || -1,
+                                            parseInt(idPedidoProdutoStr) || -1,
+                                            parseInt(idTamanhoStr) || -1,
+                                            parseInt(idGradePedProdStr) || -1
+                                        );
+                                    } else {
+                                        // Se a etapa for 4, abrir tela de Estoque/Separação
+                                        abrirModalEstoqueSeparacao(
+                                            codPedidoDecod,
+                                            dataEntregaDecod,
+                                            descricaoDecod,
+                                            tamanhoDecod,
+                                            quantidadeDecod,
+                                            parseInt(idChaveStr) || -1,
+                                            parseInt(idFuncionarioStr) || 0,
+                                            parseInt(idPedidoProdutoStr) || -1,
+                                            parseInt(idTamanhoStr) || -1,
+                                            parseInt(idGradePedProdStr) || -1,
+                                            parseInt(idEtapaProducaoStr) || 4
+                                        );
+                                    }
+                                }, 300);
+                            } else {
+                                // Se o funcionário não estava associado, foi associado agora - recarregar página
+                                showAlert('Funcionário associado com sucesso!\nFuncionário: ' + nomeFuncionario + '\nPedido: ' + codPedido, 'success');
+                                window.location.reload();
+                            }
+                        } else {
+                            showAlert(data.mensagem || 'Erro ao associar funcionário. Tente novamente.', 'error');
+                            senha = '';
+                            atualizarVisor();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao validar senha:', error);
+                        showAlert('Erro ao validar senha. Tente novamente.', 'error');
+                    });
+                });
+            }
+
+            var modalElement = document.getElementById('modalDigitarSenha');
+            if (modalElement) {
+                modalElement.addEventListener('hidden.bs.modal', function limparSenha() {
+                    senha = '';
+                    atualizarVisor();
+                }, { once: true });
+            }
+        }
+
+        // Variáveis globais para URLs dos endpoints
+        window.urlProcessarEtapaEstoque = '@Url.Action("ProcessarEtapaEstoque", "Home")';
+        window.urlAtualizarEstoque = '@Url.Action("AtualizarEstoque", "Home")';
+        window.urlAtualizarCortar = '@Url.Action("AtualizarCortar", "Home")';
+
+        // Funções globais para os botões de estoque
+        // A lógica de cálculo agora está no service
+        function diminuirEstoque() {
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            if (!inputEstoque) return;
+
+            var valorAtual = parseInt(inputEstoque.value) || 0;
+            atualizarEstoqueNoServidor(valorAtual, 'diminuir', inputEstoque);
+        }
+
+        function aumentarEstoque() {
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            if (!inputEstoque) return;
+
+            var valorAtual = parseInt(inputEstoque.value) || 0;
+            atualizarEstoqueNoServidor(valorAtual, 'aumentar', inputEstoque);
+        }
+
+        function diminuirCortar() {
+            var inputCortar = document.getElementById('estoqueCortar');
+            if (!inputCortar) return;
+
+            var valorAtual = parseInt(inputCortar.value) || 0;
+            atualizarCortarNoServidor(valorAtual, 'diminuir', inputCortar);
+        }
+
+        function aumentarCortar() {
+            var inputCortar = document.getElementById('estoqueCortar');
+            if (!inputCortar) return;
+
+            var valorAtual = parseInt(inputCortar.value) || 0;
+            atualizarCortarNoServidor(valorAtual, 'aumentar', inputCortar);
+        }
+
+        // Função auxiliar para atualizar estoque no servidor
+        // O service faz o cálculo do novo valor
+        function atualizarEstoqueNoServidor(valorAtual, operacao, inputElement) {
+            if (!inputElement) {
+                console.error('Elemento input não encontrado');
+                return;
+            }
+
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                console.error('Elemento do modal não encontrado');
+                return;
+            }
+
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idChave = parseInt(idChaveStr) || -1;
+
+            if (idChave <= 0) {
+                console.error('ID chave inválido:', idChave);
+                showAlert('ID chave inválido. Por favor, recarregue a página.', 'error');
+                return;
+            }
+
+            var urlAtualizarEstoque = window.urlAtualizarEstoque || '/Home/AtualizarEstoque';
+
+            console.log('Enviando requisição:', { idChave: idChave, valorAtual: valorAtual, operacao: operacao });
+
+            fetch(urlAtualizarEstoque, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    valorAtual: valorAtual,
+                    operacao: operacao
+                })
+            })
+            .then(response => {
+                console.log('Status da resposta:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na resposta do servidor: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Resposta do servidor (estoque):', data);
+                if (data && data.sucesso) {
+                    // O service retorna o novo valor calculado
+                    var novoValor = parseInt(data.novoValor) || 0;
+                    console.log('Atualizando input de', inputElement.value, 'para', novoValor);
+                    inputElement.value = novoValor;
+                    // Forçar atualização do DOM
+                    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log('Valor atualizado com sucesso para:', novoValor);
+
+                    // Atualizar estoqueCortar baseado na operação
+                    var inputCortar = document.getElementById('estoqueCortar');
+                    if (inputCortar) {
+                        var valorCortarAtual = parseInt(inputCortar.value) || 0;
+                        if (operacao === 'diminuir') {
+                            // Ao diminuir estoque, aumentar 1 em estoqueCortar
+                            // Mas apenas se o estoque atual (antes da diminuição) for maior que zero
+                            if (valorAtual > 0) {
+                                atualizarCortarNoServidor(valorCortarAtual, 'aumentar', inputCortar);
+                            }
+                        } else if (operacao === 'aumentar') {
+                            // Ao aumentar estoque, diminuir 1 em estoqueCortar (se for maior que zero)
+                            if (valorCortarAtual > 0) {
+                                atualizarCortarNoServidor(valorCortarAtual, 'diminuir', inputCortar);
+                            }
+                        }
+                    }
+                } else {
+                    console.error('Erro ao atualizar estoque:', data ? data.mensagem : 'Resposta inválida');
+                    showAlert(data ? (data.mensagem || 'Erro ao atualizar estoque') : 'Resposta inválida do servidor', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar estoque:', error);
+                showAlert('Erro ao atualizar estoque. Tente novamente.', 'error');
+            });
+        }
+
+        // Função auxiliar para atualizar cortar no servidor
+        // O service faz o cálculo do novo valor
+        function atualizarCortarNoServidor(valorAtual, operacao, inputElement) {
+            if (!inputElement) {
+                console.error('Elemento input não encontrado');
+                return;
+            }
+
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                console.error('Elemento do modal não encontrado');
+                return;
+            }
+
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idChave = parseInt(idChaveStr) || -1;
+
+            if (idChave <= 0) {
+                console.error('ID chave inválido:', idChave);
+                showAlert('ID chave inválido. Por favor, recarregue a página.', 'error');
+                return;
+            }
+
+            var urlAtualizarCortar = window.urlAtualizarCortar || '/Home/AtualizarCortar';
+
+            console.log('Enviando requisição:', { idChave: idChave, valorAtual: valorAtual, operacao: operacao });
+
+            fetch(urlAtualizarCortar, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    valorAtual: valorAtual,
+                    operacao: operacao
+                })
+            })
+            .then(response => {
+                console.log('Status da resposta:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na resposta do servidor: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Resposta do servidor (cortar):', data);
+                if (data && data.sucesso) {
+                    // O service retorna o novo valor calculado
+                    var novoValor = parseInt(data.novoValor) || 0;
+                    console.log('Atualizando input de', inputElement.value, 'para', novoValor);
+                    inputElement.value = novoValor;
+                    // Forçar atualização do DOM
+                    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log('Valor atualizado com sucesso para:', novoValor);
+                } else {
+                    console.error('Erro ao atualizar cortar:', data ? data.mensagem : 'Resposta inválida');
+                    showAlert(data ? (data.mensagem || 'Erro ao atualizar cortar') : 'Resposta inválida do servidor', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar cortar:', error);
+                showAlert('Erro ao atualizar cortar. Tente novamente.', 'error');
+            });
+        }
+
+        // Função para processar a etapa (Cortar, Costurar, Sublimação, Silk)
+        function processarEtapa(idEtapaProducao) {
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            // Buscar os IDs armazenados
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idFuncionarioStr = conteudoEl.getAttribute('data-id-funcionario') || '0';
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+            var idEtapaProducaoAtualStr = conteudoEl.getAttribute('data-id-etapa-producao') || '4';
+
+            // Buscar os valores dos inputs
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            var inputCortar = document.getElementById('estoqueCortar');
+            var quantidadePedidoEl = document.getElementById('estoqueQuantidade');
+
+            var quantidadeAtual = parseInt(inputEstoque ? inputEstoque.value : '0') || 0;
+            var quantidadeCortar = parseInt(inputCortar ? inputCortar.value : '0') || 0;
+            var quantidadePedido = parseInt(quantidadePedidoEl ? quantidadePedidoEl.textContent : '0') || 0;
+            var idEtapaProducaoAtual = parseInt(idEtapaProducaoAtualStr) || 4;
+
+            var idChave = parseInt(idChaveStr) || -1;
+            var idFuncionario = parseInt(idFuncionarioStr) || 0;
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+
+            // Validar dados
+            if (idChave <= 0 || idFuncionario <= 0 || idPedidoProduto <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            // Validar: Se a etapa atual é 4 (Estoque) e estoqueEmEstoque < estoqueQuantidade, não processar
+            // Mas apenas para botões que NÃO são Cortar (idEtapaProducao !== 2)
+            if (idEtapaProducao !== 2 && idEtapaProducaoAtual === 4 && quantidadeAtual < quantidadePedido) {
+                showAlert('Não é possível processar: a quantidade em estoque é menor que a quantidade do pedido. A etapa não será atualizada nem marcada como concluída.', 'warning');
+                return;
+            }
+
+            // Desabilitar botões durante o processamento
+            var botoes = document.querySelectorAll('#btnCortar, #btnCosturar, #btnSublimacao, #btnSilk');
+            botoes.forEach(function(btn) {
+                btn.disabled = true;
+            });
+
+            // Fazer a chamada AJAX
+            var urlProcessar = window.urlProcessarEtapaEstoque || '/Home/ProcessarEtapaEstoque';
+            fetch(urlProcessar, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    idFuncionario: idFuncionario,
+                    idEtapaProducao: idEtapaProducao,
+                    quantidadeAtual: quantidadeAtual,
+                    quantidadeCortar: quantidadeCortar,
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd,
+                    quantidadePedido: quantidadePedido,
+                    idEtapaProducaoAtual: idEtapaProducaoAtual
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                if (data.sucesso) {
+                    showAlert('Etapa processada com sucesso!', 'success');
+                    // Fechar o modal e recarregar a página
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 300);
+                } else {
+                    showAlert(data.mensagem || 'Erro ao processar etapa. Tente novamente.', 'error');
+                }
+            })
+            .catch(error => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                console.error('Erro ao processar etapa:', error);
+                showAlert('Erro ao processar etapa. Tente novamente.', 'error');
+            });
+        }
+
+        function validarPendenciaCorte(callback) {
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+
+            if (idPedidoProduto <= 0 || idTamanho <= 0 || idGradePedProd <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            fetch('/Home/ValidarPendenciaCorte', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.temPendencia) {
+                    showAlert(data.mensagem || 'Não é possível enviar pois existe solicitação de corte pendente.', 'error');
+                } else {
+                    // Se não houver pendência, executar o callback
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao validar pendência de corte:', error);
+                showAlert('Erro ao validar pendência. Tente novamente.', 'error');
+            });
+        }
+
+        function validarECortar() {
+            // Buscar os valores dos inputs
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            var inputCortar = document.getElementById('estoqueCortar');
+            var quantidadePedidoEl = document.getElementById('estoqueQuantidade');
+
+            // Verificar se os elementos existem
+            if (!inputEstoque || !inputCortar || !quantidadePedidoEl) {
+                showAlert('Erro: Elementos não encontrados.', 'error');
+                return;
+            }
+
+            // Obter os valores
+            var quantidadeAtualStr = inputEstoque.value || '';
+            var quantidadeCortarStr = inputCortar.value || '';
+            var quantidadePedidoStr = quantidadePedidoEl.textContent || '0';
+
+            // Verificar se os campos não estão vazios
+            if (quantidadeCortarStr === '' || quantidadeAtualStr === '') {
+                showAlert('Por favor, preencha os campos de quantidade.', 'warning');
+                return;
+            }
+
+            // Converter para números
+            var quantidadeAtual = parseInt(quantidadeAtualStr) || 0;
+            var quantidadeCortar = parseInt(quantidadeCortarStr) || 0;
+            var quantidadePedido = parseInt(quantidadePedidoStr) || 0;
+
+            // Verificar se a quantidade para cortar é maior que zero
+            if (quantidadeCortar <= 0) {
+                showAlert('A quantidade deve ser maior que zero para cortar.', 'warning');
+                return;
+            }
+
+            // Processar diretamente sem validar quantidade do pedido (botão Cortar)
+            processarEtapa(2);
+        }
+
+        function processarCostura() {
+            // Validar pendência de corte primeiro
+            validarPendenciaCorte(function() {
+                processarCosturaInterno();
+            });
+        }
+
+        function processarCosturaInterno() {
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            // Buscar os IDs armazenados
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idFuncionarioStr = conteudoEl.getAttribute('data-id-funcionario') || '0';
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+
+            // Buscar os valores dos inputs
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            var quantidadePedidoEl = document.getElementById('estoqueQuantidade');
+
+            var quantidadeAtual = parseInt(inputEstoque ? inputEstoque.value : '0') || 0;
+            var quantidadePedido = parseInt(quantidadePedidoEl ? quantidadePedidoEl.textContent : '0') || 0;
+
+            var idChave = parseInt(idChaveStr) || -1;
+            var idFuncionario = parseInt(idFuncionarioStr) || 0;
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+
+            // Validar dados
+            if (idChave <= 0 || idFuncionario <= 0 || idPedidoProduto <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            // Desabilitar botões durante o processamento
+            var botoes = document.querySelectorAll('#btnCortar, #btnCosturar, #btnSublimacao, #btnSilk');
+            botoes.forEach(function(btn) {
+                btn.disabled = true;
+            });
+
+            // Fazer a chamada AJAX
+            fetch('/Home/ProcessarCostura', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    idFuncionario: idFuncionario,
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd,
+                    quantidadeAtual: quantidadeAtual,
+                    quantidadePedido: quantidadePedido
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                if (data.sucesso) {
+                    showAlert(data.mensagem || 'Enviado Pedido de Costura', 'success').then(function() {
+                        // Fechar o modal e recarregar a página
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 300);
+                    });
+                } else {
+                    if (data.temPendencia) {
+                        showAlert(data.mensagem || 'Não é possível Enviar para costura pois existe solicitação de corte Pendente', 'error');
+                    } else if (data.precisaConfirmacao) {
+                        // Mostrar diálogo de confirmação
+                        showConfirm(data.mensagem || 'A quantidade não é suficiente para produção. Deseja continuar?').then(function(confirmado) {
+                            if (confirmado) {
+                                // Processar com confirmação
+                                fetch('/Home/ProcessarCosturaComConfirmacao', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        idChave: idChave,
+                                        idFuncionario: idFuncionario,
+                                        idPedidoProduto: idPedidoProduto,
+                                        idTamanho: idTamanho,
+                                        idGradePedProd: idGradePedProd,
+                                        quantidadeAtual: quantidadeAtual,
+                                        quantidadePedido: quantidadePedido
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(dataConfirm => {
+                                    if (dataConfirm.sucesso) {
+                                        showAlert(dataConfirm.mensagem || 'Enviado Pedido de Costura', 'success').then(function() {
+                                            // Fechar o modal e recarregar a página
+                                            var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                                            if (modal) {
+                                                modal.hide();
+                                            }
+                                            setTimeout(function() {
+                                                window.location.reload();
+                                            }, 300);
+                                        });
+                                    } else {
+                                        showAlert(dataConfirm.mensagem || 'Erro ao processar costura. Tente novamente.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Erro ao processar costura com confirmação:', error);
+                                    showAlert('Erro ao processar costura. Tente novamente.', 'error');
+                                });
+                            }
+                        });
+                    } else {
+                        showAlert(data.mensagem || 'Erro ao processar costura. Tente novamente.', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                console.error('Erro ao processar costura:', error);
+                showAlert('Erro ao processar costura. Tente novamente.', 'error');
+            });
+        }
+
+        function processarSublimacao() {
+            // Validar pendência de corte primeiro
+            validarPendenciaCorte(function() {
+                processarSublimacaoInterno();
+            });
+        }
+
+        function processarSublimacaoInterno() {
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            // Buscar os IDs armazenados
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idFuncionarioStr = conteudoEl.getAttribute('data-id-funcionario') || '0';
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+
+            // Buscar os valores dos inputs
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            var quantidadePedidoEl = document.getElementById('estoqueQuantidade');
+
+            var quantidadeAtual = parseInt(inputEstoque ? inputEstoque.value : '0') || 0;
+            var quantidadePedido = parseInt(quantidadePedidoEl ? quantidadePedidoEl.textContent : '0') || 0;
+
+            var idChave = parseInt(idChaveStr) || -1;
+            var idFuncionario = parseInt(idFuncionarioStr) || 0;
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+
+            // Validar dados
+            if (idChave <= 0 || idFuncionario <= 0 || idPedidoProduto <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            // Desabilitar botões durante o processamento
+            var botoes = document.querySelectorAll('#btnCortar, #btnCosturar, #btnSublimacao, #btnSilk');
+            botoes.forEach(function(btn) {
+                btn.disabled = true;
+            });
+
+            // Fazer a chamada AJAX
+            fetch('/Home/ProcessarEtapa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    idFuncionario: idFuncionario,
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd,
+                    quantidadeAtual: quantidadeAtual,
+                    quantidadePedido: quantidadePedido,
+                    idEtapaProducao: 7, // Sublimação
+                    nomeEtapa: 'Sublimação'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                if (data.sucesso) {
+                    showAlert(data.mensagem || 'Enviado Pedido de Sublimação', 'success').then(function() {
+                        // Fechar o modal e recarregar a página
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 300);
+                    });
+                } else {
+                    if (data.temPendencia) {
+                        showAlert(data.mensagem || 'Não é possível Enviar para Sublimação pois existe solicitação de corte Pendente', 'error');
+                    } else if (data.precisaConfirmacao) {
+                        // Mostrar diálogo de confirmação
+                        showConfirm(data.mensagem || 'A quantidade não é suficiente para produção. Deseja continuar?').then(function(confirmado) {
+                            if (confirmado) {
+                                // Processar com confirmação
+                                fetch('/Home/ProcessarEtapaComConfirmacao', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        idChave: idChave,
+                                        idFuncionario: idFuncionario,
+                                        idPedidoProduto: idPedidoProduto,
+                                        idTamanho: idTamanho,
+                                        idGradePedProd: idGradePedProd,
+                                        quantidadeAtual: quantidadeAtual,
+                                        quantidadePedido: quantidadePedido,
+                                        idEtapaProducao: 7, // Sublimação
+                                        nomeEtapa: 'Sublimação'
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(dataConfirm => {
+                                    if (dataConfirm.sucesso) {
+                                        showAlert(dataConfirm.mensagem || 'Enviado Pedido de Sublimação', 'success').then(function() {
+                                            // Fechar o modal e recarregar a página
+                                            var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                                            if (modal) {
+                                                modal.hide();
+                                            }
+                                            setTimeout(function() {
+                                                window.location.reload();
+                                            }, 300);
+                                        });
+                                    } else {
+                                        showAlert(dataConfirm.mensagem || 'Erro ao processar sublimação. Tente novamente.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Erro ao processar sublimação com confirmação:', error);
+                                    showAlert('Erro ao processar sublimação. Tente novamente.', 'error');
+                                });
+                            }
+                        });
+                    } else {
+                        showAlert(data.mensagem || 'Erro ao processar sublimação. Tente novamente.', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                console.error('Erro ao processar sublimação:', error);
+                showAlert('Erro ao processar sublimação. Tente novamente.', 'error');
+            });
+        }
+
+        function processarSilk() {
+            // Validar pendência de corte primeiro
+            validarPendenciaCorte(function() {
+                processarSilkInterno();
+            });
+        }
+
+        function processarSilkInterno() {
+            var conteudoEl = document.getElementById('conteudoEstoqueSeparacao');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            // Buscar os IDs armazenados
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idFuncionarioStr = conteudoEl.getAttribute('data-id-funcionario') || '0';
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+
+            // Buscar os valores dos inputs
+            var inputEstoque = document.getElementById('estoqueEmEstoque');
+            var quantidadePedidoEl = document.getElementById('estoqueQuantidade');
+
+            var quantidadeAtual = parseInt(inputEstoque ? inputEstoque.value : '0') || 0;
+            var quantidadePedido = parseInt(quantidadePedidoEl ? quantidadePedidoEl.textContent : '0') || 0;
+
+            var idChave = parseInt(idChaveStr) || -1;
+            var idFuncionario = parseInt(idFuncionarioStr) || 0;
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+
+            // Validar dados
+            if (idChave <= 0 || idFuncionario <= 0 || idPedidoProduto <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            // Desabilitar botões durante o processamento
+            var botoes = document.querySelectorAll('#btnCortar, #btnCosturar, #btnSublimacao, #btnSilk');
+            botoes.forEach(function(btn) {
+                btn.disabled = true;
+            });
+
+            // Fazer a chamada AJAX
+            fetch('/Home/ProcessarEtapa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    idFuncionario: idFuncionario,
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd,
+                    quantidadeAtual: quantidadeAtual,
+                    quantidadePedido: quantidadePedido,
+                    idEtapaProducao: 9, // Silk
+                    nomeEtapa: 'Silk'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                if (data.sucesso) {
+                    showAlert(data.mensagem || 'Enviado Pedido de Silk', 'success').then(function() {
+                        // Fechar o modal e recarregar a página
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 300);
+                    });
+                } else {
+                    if (data.temPendencia) {
+                        showAlert(data.mensagem || 'Não é possível Enviar para Silk pois existe solicitação de corte Pendente', 'error');
+                    } else if (data.precisaConfirmacao) {
+                        // Mostrar diálogo de confirmação
+                        showConfirm(data.mensagem || 'A quantidade não é suficiente para produção. Deseja continuar?').then(function(confirmado) {
+                            if (confirmado) {
+                                // Processar com confirmação
+                                fetch('/Home/ProcessarEtapaComConfirmacao', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        idChave: idChave,
+                                        idFuncionario: idFuncionario,
+                                        idPedidoProduto: idPedidoProduto,
+                                        idTamanho: idTamanho,
+                                        idGradePedProd: idGradePedProd,
+                                        quantidadeAtual: quantidadeAtual,
+                                        quantidadePedido: quantidadePedido,
+                                        idEtapaProducao: 9, // Silk
+                                        nomeEtapa: 'Silk'
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(dataConfirm => {
+                                    if (dataConfirm.sucesso) {
+                                        showAlert(dataConfirm.mensagem || 'Enviado Pedido de Silk', 'success').then(function() {
+                                            // Fechar o modal e recarregar a página
+                                            var modal = bootstrap.Modal.getInstance(document.getElementById('modalEstoqueSeparacao'));
+                                            if (modal) {
+                                                modal.hide();
+                                            }
+                                            setTimeout(function() {
+                                                window.location.reload();
+                                            }, 300);
+                                        });
+                                    } else {
+                                        showAlert(dataConfirm.mensagem || 'Erro ao processar silk. Tente novamente.', 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Erro ao processar silk com confirmação:', error);
+                                    showAlert('Erro ao processar silk. Tente novamente.', 'error');
+                                });
+                            }
+                        });
+                    } else {
+                        showAlert(data.mensagem || 'Erro ao processar silk. Tente novamente.', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                // Reabilitar botões
+                botoes.forEach(function(btn) {
+                    btn.disabled = false;
+                });
+
+                console.error('Erro ao processar silk:', error);
+                showAlert('Erro ao processar silk. Tente novamente.', 'error');
+            });
+        }
+
+        // Funções para a tela de Concluir Etapa
+        function inicializarConcluirEtapa() {
+            var inputPerda = document.getElementById('inputPerda');
+
+            if (inputPerda) {
+                // Prevenir entrada manual de valores negativos e aceitar apenas números
+                inputPerda.addEventListener('input', function() {
+                    var valor = parseInt(this.value) || 0;
+                    if (valor < 0) {
+                        this.value = 0;
+                    } else if (isNaN(this.value) || this.value === '') {
+                        this.value = 0;
+                    } else {
+                        this.value = parseInt(this.value);
+                    }
+                    // Mostrar/ocultar combo baseado no valor
+                    atualizarVisibilidadeComboPerda();
+                });
+
+                // Prevenir entrada de caracteres não numéricos
+                inputPerda.addEventListener('keypress', function(e) {
+                    if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            // Carregar dados de PERDA_PRODUCAO
+            carregarPerdaProducao();
+        }
+
+        function carregarPerdaProducao() {
+            fetch('/Home/BuscarPerdaProducao')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso && data.dados) {
+                        var combo = document.getElementById('comboPerdaProducao');
+                        if (combo) {
+                            // Limpar opções existentes (exceto a primeira)
+                            combo.innerHTML = '<option value="0">Selecione...</option>';
+
+                            // Adicionar opções
+                            data.dados.forEach(function(item) {
+                                var option = document.createElement('option');
+                                // Assumindo que a primeira coluna é ID e a segunda é DESCRICAO
+                                // Ajustar conforme a estrutura real da tabela
+                                var id = item.ID_PERDA || item.ID || Object.values(item)[0];
+                                var descricao = item.DESCRICAO || item.NOME || Object.values(item)[1] || id;
+                                option.value = id;
+                                option.textContent = descricao;
+                                combo.appendChild(option);
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar perda produção:', error);
+                });
+        }
+
+        function diminuirPerda() {
+            var inputPerda = document.getElementById('inputPerda');
+            if (inputPerda) {
+                var valor = parseInt(inputPerda.value) || 0;
+                if (valor > 0) {
+                    inputPerda.value = valor - 1;
+                    atualizarVisibilidadeComboPerda();
+                }
+            }
+        }
+
+        function aumentarPerda() {
+            var inputPerda = document.getElementById('inputPerda');
+            if (inputPerda) {
+                var valor = parseInt(inputPerda.value) || 0;
+                inputPerda.value = valor + 1;
+                atualizarVisibilidadeComboPerda();
+            }
+        }
+
+        function atualizarVisibilidadeComboPerda() {
+            var inputPerda = document.getElementById('inputPerda');
+            var divComboPerda = document.getElementById('divComboPerda');
+            if (inputPerda && divComboPerda) {
+                var valor = parseInt(inputPerda.value) || 0;
+                if (valor > 0) {
+                    divComboPerda.style.display = 'block';
+                } else {
+                    divComboPerda.style.display = 'none';
+                }
+            }
+        }
+
+        function finalizarEtapa() {
+            var conteudoEl = document.getElementById('conteudoConcluirEtapa');
+            if (!conteudoEl) {
+                showAlert('Erro: Elemento do modal não encontrado', 'error');
+                return;
+            }
+
+            // Buscar os IDs armazenados
+            var idChaveStr = conteudoEl.getAttribute('data-id-chave') || '-1';
+            var idPedidoProdutoStr = conteudoEl.getAttribute('data-id-pedido-produto') || '-1';
+            var idTamanhoStr = conteudoEl.getAttribute('data-id-tamanho') || '-1';
+            var idGradePedProdStr = conteudoEl.getAttribute('data-id-grade-ped-prod') || '-1';
+
+            // Buscar valores
+            var inputPerda = document.getElementById('inputPerda');
+            var comboPerda = document.getElementById('comboPerdaProducao');
+            var quantidadeEl = document.getElementById('concluirQuantidade');
+
+            var idChave = parseInt(idChaveStr) || -1;
+            var idPedidoProduto = parseInt(idPedidoProdutoStr) || -1;
+            var idTamanho = parseInt(idTamanhoStr) || -1;
+            var idGradePedProd = parseInt(idGradePedProdStr) || -1;
+            var quantidadePerda = parseInt(inputPerda ? inputPerda.value : '0') || 0;
+            var idPerda = parseInt(comboPerda ? comboPerda.value : '0') || 0;
+            var quantidade = parseInt(quantidadeEl ? quantidadeEl.textContent : '0') || 0;
+
+            // Validar dados
+            if (idChave <= 0 || idPedidoProduto <= 0) {
+                showAlert('Erro: Dados inválidos. Por favor, tente novamente.', 'error');
+                return;
+            }
+
+            // Se tiver perda, validar se selecionou o tipo
+            if (quantidadePerda > 0 && idPerda <= 0) {
+                showAlert('Por favor, selecione o tipo de perda.', 'warning');
+                return;
+            }
+
+            // Desabilitar botão durante o processamento
+            var btnFinalizar = document.getElementById('btnFinalizar');
+            if (btnFinalizar) {
+                btnFinalizar.disabled = true;
+            }
+
+            // Calcular quantidade produzida (quantidade - perda)
+            var quantidadeProduzida = quantidade - quantidadePerda;
+            if (quantidadeProduzida < 0) {
+                quantidadeProduzida = 0;
+            }
+
+            // Fazer a chamada AJAX
+            fetch('/Home/FinalizarEtapa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    idChave: idChave,
+                    idPedidoProduto: idPedidoProduto,
+                    idTamanho: idTamanho,
+                    idGradePedProd: idGradePedProd,
+                    quantidadePerda: quantidadePerda,
+                    quantidadeProduzida: quantidadeProduzida,
+                    idPerda: idPerda
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reabilitar botão
+                if (btnFinalizar) {
+                    btnFinalizar.disabled = false;
+                }
+
+                if (data.sucesso) {
+                    showAlert(data.mensagem || 'Etapa finalizada com sucesso!', 'success').then(function() {
+                        // Fechar o modal e recarregar a página
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('modalConcluirEtapa'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 300);
+                    });
+                } else {
+                    showAlert(data.mensagem || 'Erro ao finalizar etapa. Tente novamente.', 'error');
+                }
+            })
+            .catch(error => {
+                // Reabilitar botão
+                if (btnFinalizar) {
+                    btnFinalizar.disabled = false;
+                }
+
+                console.error('Erro ao finalizar etapa:', error);
+                showAlert('Erro ao finalizar etapa. Tente novamente.', 'error');
+            });
+        }
+
+        // Funções para a tela de Expedição
+        function inicializarBotaoImprimirEtiqueta() {
+            var btnImprimirEtiqueta = document.getElementById('btnImprimirEtiqueta');
+            if (!btnImprimirEtiqueta) return;
+
+            btnImprimirEtiqueta.addEventListener('click', function() {
+                var idPedido = parseInt(btnImprimirEtiqueta.getAttribute('data-id-pedido')) || 0;
+                if (idPedido <= 0) {
+                    alert('ID do pedido inválido.');
+                    return;
+                }
+
+                // Validar se todos os produtos estão na etapa 8
+                fetch('@Url.Action("ValidarConclusaoPedido", "Home")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idPedido: idPedido
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.todosProdutosNaEtapa8) {
+                        showAlert('Existem produtos do pedido ainda em produção.', 'warning');
+                        return;
+                    }
+
+                    // Confirmar conclusão do pedido
+                    showConfirm('O Pedido será concluido Deseja prosseguir ?').then(function(confirmado) {
+                        if (!confirmado) {
+                            return;
+                        }
+
+                        // Buscar ID do funcionário do modal de expedição
+                        var conteudoExpedicao = document.getElementById('conteudoExpedicao');
+                        var idFuncionario = 0;
+                        if (conteudoExpedicao) {
+                            idFuncionario = parseInt(conteudoExpedicao.getAttribute('data-id-funcionario')) || 0;
+                        }
+                        
+                        // Se não encontrou no modal de expedição, tentar no modal de senha
+                        if (idFuncionario <= 0) {
+                            var conteudoSenha = document.getElementById('conteudoDigitarSenha');
+                            if (conteudoSenha) {
+                                idFuncionario = parseInt(conteudoSenha.getAttribute('data-id-funcionario')) || 0;
+                            }
+                        }
+
+                        // Concluir pedido
+                        fetch('@Url.Action("ConcluirPedido", "Home")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                idPedido: idPedido,
+                                idFuncionario: idFuncionario
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.sucesso) {
+                                // Confirmar impressão da etiqueta
+                                showConfirm('O Pedido Concluido. Deseja emitir a etiqueta para despacho ?').then(function(confirmado) {
+                                    if (confirmado) {
+                                        // Abrir janela de impressão
+                                        var urlImpressao = '@Url.Action("ImprimirEtiqueta", "Home")?idPedido=' + idPedido;
+                                        window.open(urlImpressao, '_blank');
+                                    }
+                                });
+                            } else {
+                                showAlert(data.mensagem || 'Erro ao concluir o pedido.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao concluir pedido:', error);
+                            alert('Erro ao concluir o pedido.');
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao validar conclusão:', error);
+                    alert('Erro ao validar conclusão do pedido.');
+                });
+            });
+        }
+
+        function inicializarBotaoImprimirPedido() {
+            var btnImprimirPedido = document.getElementById('btnImprimirPedido');
+            if (!btnImprimirPedido) return;
+
+            btnImprimirPedido.addEventListener('click', function() {
+                var idPedido = parseInt(btnImprimirPedido.getAttribute('data-id-pedido')) || 0;
+                if (idPedido <= 0) {
+                    alert('ID do pedido inválido.');
+                    return;
+                }
+
+                // Abrir janela de impressão do pedido
+                var urlImpressao = '@Url.Action("ImprimirPedido", "Home")?idPedido=' + idPedido;
+                window.open(urlImpressao, '_blank');
+            });
+        }
+    </script>
+}

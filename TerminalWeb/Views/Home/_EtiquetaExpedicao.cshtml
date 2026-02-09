@@ -1,0 +1,121 @@
+@using System.Data
+@{
+    var dadosExpedicao = ViewBag.DadosExpedicao as DataTable;
+    DataRow? row = null;
+    if (dadosExpedicao != null && dadosExpedicao.Rows.Count > 0)
+    {
+        row = dadosExpedicao.Rows[0];
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Etiqueta de Expedição</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #000;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        .section-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .remetente {
+            background-color: #f0f0f0;
+        }
+        .destinatario {
+            background-color: #e8f5e9;
+        }
+        @@media print {
+            body {
+                margin: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            ETIQUETA DE EXPEDIÇÃO
+        </div>
+
+        @if (row != null)
+        {
+            <!-- Remetente -->
+            <div class="section remetente">
+                <div class="section-title">REMETENTE:</div>
+                <div class="section-content">
+                    <strong>VISABEL INDUSTRIA E COMERCIO DE UNIFORMES LTDA</strong><br />
+                    RUA TUCANOS, nº 1971, Centro<br />
+                    Cep: 86701-020
+                </div>
+            </div>
+
+            <!-- Destinatário -->
+            <div class="section destinatario">
+                <div class="section-title">DESTINATÁRIO:</div>
+                <div class="section-content">
+                    @{
+                        var cliente = row["FANTASIA"] != DBNull.Value && !string.IsNullOrEmpty(row["FANTASIA"]?.ToString()) 
+                            ? row["FANTASIA"]?.ToString() 
+                            : row["NOMERAZAO"]?.ToString();
+                    }
+                    <strong>@(cliente ?? "-")</strong><br />
+                    @(row["ENDERECOCOMPLETO"]?.ToString() ?? "-")
+                </div>
+            </div>
+
+        }
+        else
+        {
+            <div class="section">
+                <p>Erro ao carregar dados do pedido.</p>
+            </div>
+        }
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">Imprimir</button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">Fechar</button>
+    </div>
+
+    <script>
+        // Imprimir automaticamente ao carregar
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
+

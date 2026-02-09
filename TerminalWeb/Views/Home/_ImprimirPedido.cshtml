@@ -1,0 +1,176 @@
+@using System.Data
+@{
+    var dadosExpedicao = ViewBag.DadosExpedicao as DataTable;
+    var produtosExpedicao = ViewBag.ProdutosExpedicao as DataTable;
+    DataRow? row = null;
+    if (dadosExpedicao != null && dadosExpedicao.Rows.Count > 0)
+    {
+        row = dadosExpedicao.Rows[0];
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Impressão do Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #000;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        .section-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .checkbox-col {
+            width: 50px;
+            text-align: center;
+        }
+        .descricao-col {
+            width: 40%;
+        }
+        .tamanho-col {
+            width: 20%;
+        }
+        .quantidade-col {
+            width: 20%;
+            text-align: center;
+        }
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        @@media print {
+            body {
+                margin: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            INFORMAÇÕES DO PEDIDO
+        </div>
+
+        @if (row != null)
+        {
+            <!-- Informações do Pedido -->
+            <div class="section">
+                <div class="section-title">DADOS DO PEDIDO:</div>
+                <div class="section-content">
+                    <strong>Código do Pedido:</strong> @(row["COD_PEDIDO"]?.ToString() ?? "-")<br />
+                    <strong>Data de Entrega:</strong> @(row["DATA_ENTREGA"] != DBNull.Value ? Convert.ToDateTime(row["DATA_ENTREGA"]).ToString("dd/MM/yyyy") : "-")<br />
+                    <strong>Cliente:</strong> @{
+                        var cliente = row["FANTASIA"] != DBNull.Value && !string.IsNullOrEmpty(row["FANTASIA"]?.ToString()) 
+                            ? row["FANTASIA"]?.ToString() 
+                            : row["NOMERAZAO"]?.ToString();
+                    }@(cliente ?? "-")
+                </div>
+            </div>
+
+            <!-- Itens do Pedido -->
+            @if (produtosExpedicao != null && produtosExpedicao.Rows.Count > 0)
+            {
+                <div class="section">
+                    <div class="section-title">ITENS DO PEDIDO:</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col">✓</th>
+                                <th class="descricao-col">Descrição</th>
+                                <th class="tamanho-col">Tamanho</th>
+                                <th class="quantidade-col">Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (System.Data.DataRow prodRow in produtosExpedicao.Rows)
+                            {
+                                <tr>
+                                    <td class="checkbox-col">
+                                        <input type="checkbox" class="checkbox" />
+                                    </td>
+                                    <td class="descricao-col">
+                                        @(prodRow["DESCRICAO"]?.ToString() ?? "-")
+                                    </td>
+                                    <td class="tamanho-col">
+                                        @(prodRow["TAMANHO"]?.ToString() ?? "-")
+                                    </td>
+                                    <td class="quantidade-col">
+                                        @(prodRow["QUANTIDADE"]?.ToString() ?? "0")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="section">
+                <p>Erro ao carregar dados do pedido.</p>
+            </div>
+        }
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">Imprimir</button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">Fechar</button>
+    </div>
+
+    <script>
+        // Imprimir automaticamente ao carregar
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
+
+
