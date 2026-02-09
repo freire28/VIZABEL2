@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2020/05/12 10:41:55.000.519,=C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/05/21 11:42:08.000.357,=C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/26 14:09:20.000.195,=C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/26 14:11:52.000.215,C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\TInject\Aulas\projetoBotDinamico\u_frmMain.pas</Transaction>
+    <Transaction>2020/09/26 14:11:52.000.215,C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\TInject\Aulas\projetoBotDinamico\u_frmMain.dfm</Transaction>
+    <Transaction>2020/09/26 14:11:55.000.066,C:\Users\Dell-Mike\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\TInject\Aulas\projetoBotDinamico\Project1.dproj</Transaction>
+    <Transaction>2020/09/26 14:14:57.000.875,=C:\TInject\Aulas\projetoBotDinamico\uBotGestor.pas</Transaction>
+    <Transaction>2020/09/26 14:14:57.000.840,=C:\TInject\Aulas\projetoBotDinamico\uBotConversa.pas</Transaction>
+    <Transaction>2020/10/18 11:45:30.000.967,=C:\TInject\Curso\BotDinamico\Unit1.pas</Transaction>
+    <Transaction>2020/10/18 11:45:46.000.417,C:\TInject\Curso\BotDinamico\uBotMenu.pas=C:\TInject\Curso\BotDinamico\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>
